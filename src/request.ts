@@ -1,5 +1,5 @@
 import { message } from "ant-design-vue";
-import axios from "node_modules/axios/index.cjs";
+import axios from "axios";
 
 const DEV_BASE_URL = "http://localhost:8123"; // 开发环境基础地址
 // const PROD_BASE_URL = "http://81.69.229.63"; // 生产环境基础地址（已注释）

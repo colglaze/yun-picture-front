@@ -24,7 +24,9 @@
                   {{ loginUserStore.loginUser.userName ?? '无名' }}
                 </div>
                 <div v-else>
-                  <a-button type="primary" href="/user/login">登录</a-button>
+                  <RouterLink to="/user/login">
+                    <a-button type="primary">登录</a-button>
+                  </RouterLink>
                 </div>
             </div>
 
@@ -44,9 +46,6 @@ import type { MenuProps } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import { useLoginUserStore } from '@/stores/useLoginUserStore';
 import zhCN from 'ant-design-vue/es/locale/zh_CN';
-import dayjs from 'dayjs';
-import 'dayjs/locale/zh-cn';
-dayjs.locale('zh-cn');
 const loginUserStore = useLoginUserStore()
 const current = ref<string[]>([]);
 const items = ref<MenuProps['items']>([
