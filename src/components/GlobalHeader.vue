@@ -1,53 +1,65 @@
 <template>
-    <a-config-provider :locale="zhCN">
+  <a-config-provider :locale="zhCN">
     <div id="globalHeader">
-        <a-row :wrap="false">
-          <a-col flex="200px">
-            <RouterLink to="/">
-              <div class="title-bar">
-                <img class="logo" src="../assets/logo.png" alt="logo" />
-                <div class="title">子衿云图库</div>
-              </div>
-            </RouterLink>
-          </a-col>
-          <a-col flex="auto">
-            <a-menu
-              v-model:selectedKeys="current"
-              mode="horizontal"
-              :items="items"
-              @click="doMenuClick"
-            />
-          </a-col>
-          <a-col flex="120px">
-            <div class="user-login-status">
-                <div v-if="loginUserStore.loginUser.id">
+      <a-row :wrap="false">
+        <a-col flex="200px">
+          <RouterLink to="/">
+            <div class="title-bar">
+              <img class="logo" src="../assets/logo.png" alt="logo" />
+              <div class="title">子衿云图库</div>
+            </div>
+          </RouterLink>
+        </a-col>
+        <a-col flex="auto">
+          <a-menu
+            v-model:selectedKeys="current"
+            mode="horizontal"
+            :items="items"
+            @click="doMenuClick"
+          />
+        </a-col>
+        <a-col flex="120px">
+          <div class="user-login-status">
+            <div v-if="loginUserStore.loginUser.id">
+              <a-dropdown>
+                <ASpace>
+                  <a-avatar :src="loginUserStore.loginUser.userAvatar" />
                   {{ loginUserStore.loginUser.userName ?? '无名' }}
-                </div>
-                <div v-else>
-                  <RouterLink to="/user/login">
-                    <a-button type="primary">登录</a-button>
-                  </RouterLink>
-                </div>
+                </ASpace>
+                <template #overlay>
+                  <a-menu>
+                    <a-menu-item @click="doLogout">
+                      <LogoutOutlined />
+                       退出登录
+                    </a-menu-item>
+                  </a-menu>
+                </template>
+              </a-dropdown>
             </div>
 
-          </a-col>
-        </a-row>
-
+            <div v-else>
+              <RouterLink to="/user/login">
+                <a-button type="primary">登录</a-button>
+              </RouterLink>
+            </div>
+          </div>
+        </a-col>
+      </a-row>
     </div>
-
-    </a-config-provider>
+  </a-config-provider>
 </template>
 
-
 <script lang="ts" setup>
-import { h, ref } from 'vue';
-import { HomeOutlined } from '@ant-design/icons-vue';
-import type { MenuProps } from 'ant-design-vue';
-import { useRouter } from 'vue-router';
-import { useLoginUserStore } from '@/stores/useLoginUserStore';
-import zhCN from 'ant-design-vue/es/locale/zh_CN';
+import { LogoutOutlined } from '@ant-design/icons-vue'
+import { h, ref } from 'vue'
+import { HomeOutlined } from '@ant-design/icons-vue'
+import { message, type MenuProps } from 'ant-design-vue'
+import { useRouter } from 'vue-router'
+import { useLoginUserStore } from '@/stores/useLoginUserStore'
+import zhCN from 'ant-design-vue/es/locale/zh_CN'
+import { userLogoutUsingPost } from '@/api/userController'
 const loginUserStore = useLoginUserStore()
-const current = ref<string[]>([]);
+const current = ref<string[]>([])
 const items = ref<MenuProps['items']>([
   {
     key: '/',
@@ -67,36 +79,45 @@ const items = ref<MenuProps['items']>([
   },
 ])
 
-const router = useRouter();
+const router = useRouter()
 const doMenuClick = ({ key }) => {
-    router.push({
-        path:key
-    })
+  router.push({
+    path: key,
+  })
 }
 
-router.afterEach((to,from,next) => {
-    current.value = [to.path]
+router.afterEach((to, from, next) => {
+  current.value = [to.path]
 })
 
-
+//用户注销
+const doLogout = async () => {
+  const res = await userLogoutUsingPost()
+  if(res.data.code === 0){
+    loginUserStore.setLoginUser({
+      userName: '未登录',
+    })
+    message.success('退出登录成功')
+    await router.push('/user/login')
+  } else{
+    message.error('退出登录失败' + res.data.message)
+  }
+}
 </script>
 
 <style scoped>
 #globalHeader .title-bar {
-    display: flex;
-    align-items: center;
-
+  display: flex;
+  align-items: center;
 }
 
 #globalHeader .title {
-    color: black;
-    font-size: 18px;
-    margin-left: 16px;
+  color: black;
+  font-size: 18px;
+  margin-left: 16px;
 }
 
 #globalHeader .logo {
-    height: 48px;
+  height: 48px;
 }
-
-
 </style>
