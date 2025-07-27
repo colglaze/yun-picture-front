@@ -23,14 +23,24 @@
             <div v-if="loginUserStore.loginUser.id">
               <a-dropdown>
                 <ASpace>
-                  <a-avatar :src="loginUserStore.loginUser.userAvatar" />
+                  <a-avatar 
+                    :src="loginUserStore.loginUser.userAvatar" 
+                    :size="40" 
+                    :alt="loginUserStore.loginUser.userName || '用户头像'"
+                  >
+                    {{ (loginUserStore.loginUser.userName || '用户').charAt(0) }}
+                  </a-avatar>
                   {{ loginUserStore.loginUser.userName ?? '无名' }}
                 </ASpace>
                 <template #overlay>
                   <a-menu>
+                    <a-menu-item @click="router.push('/user/info')">
+                      <UserOutlined />
+                      个人中心
+                    </a-menu-item>
                     <a-menu-item @click="doLogout">
                       <LogoutOutlined />
-                       退出登录
+                      退出登录
                     </a-menu-item>
                   </a-menu>
                 </template>
@@ -50,9 +60,8 @@
 </template>
 
 <script lang="ts" setup>
-import { LogoutOutlined } from '@ant-design/icons-vue'
+import { HomeOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons-vue'
 import { computed, h, ref } from 'vue'
-import { HomeOutlined } from '@ant-design/icons-vue'
 import { message, type MenuProps } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
@@ -121,6 +130,12 @@ const doLogout = async () => {
     message.error('退出登录失败' + res.data.message)
   }
 }
+
+//个人信息修改
+const userModify = async () => {
+  
+}
+
 </script>
 
 <style scoped>
