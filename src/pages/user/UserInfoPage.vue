@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/valid-v-else -->
 <template>
   <div id="userInfoPage">
     <!-- 个人信息概览 -->
@@ -11,23 +12,25 @@
           >
             {{ (userInfo.userName || '用户').charAt(0) }}
           </a-avatar>
-          <div class="vip-badge" v-if="userInfo.userRole === 'admin'">
-          
+          <div class="vip-badge" v-if="userInfo.vipNumber !== null">
             <a-tag color="gold">VIP</a-tag>
           </div>
         </div>
         <div class="user-info">
           <div class="username">
             {{ userInfo.userName || '未设置用户名' }}
-            <span class="user-level">V1</span>
+            <div v-if="userInfo.vipNumber !== null">
+              <span class="user-level">至尊会员</span>
+            </div>
+            
           </div>
           <div class="user-desc">
             {{ userInfo.userProfile || '暂无个人简介' }}
           </div>
           <div class="user-stats">
             <div class="stat-item">
-              <span class="stat-label">排名</span>
-              <span class="stat-value">{{ userStats.rank || '--' }}</span>
+              <span class="stat-label">照片数量</span>
+              <span class="stat-value">{{ userStats.photoNum || '--' }}</span>
             </div>
             <div class="stat-item">
               <span class="stat-label">积分</span>
@@ -57,10 +60,15 @@
           <EditOutlined />
           修改资料
         </a-button>
+        <a-button  @click="updataPIN = true">
+          <SettingTwoTone />
+           修改密码
+        </a-button>
         <a-button @click="handleShare">
           <ShareAltOutlined />
           分享
         </a-button>
+         
       </div>
     </div>
 
@@ -106,7 +114,7 @@
           </div>
         </a-tab-pane>
         
-        <a-tab-pane key="learning" tab="学习信息">
+        <!-- <a-tab-pane key="learning" tab="学习信息">
           <div class="info-section">
             <div class="section-header">
               <h3>学习信息</h3>
@@ -127,10 +135,10 @@
               </div>
             </div>
           </div>
-        </a-tab-pane>
+        </a-tab-pane> -->
 
-        <a-tab-pane key="vip" tab="会员信息" v-if="userInfo.userRole === 'admin'">
-          <div class="info-section">
+        <a-tab-pane key="vip" tab="会员信息" >
+          <div class="info-section" v-if="userInfo.vipNumber !== null">
             <div class="section-header">
               <h3>会员信息</h3>
             </div>
@@ -141,11 +149,30 @@
                   <span>尊享会员</span>
                 </div>
                 <div class="vip-content">
-                  <p>会员编号：{{ userInfo.id }}</p>
+                  <p>会员编号：{{ userInfo.vipNumber }}</p>
                   <p>会员等级：VIP</p>
-                  <p>到期时间：2025-12-05</p>
+                  <p>到期时间：{{ dayjs(userInfo.vipExpireTime).format('YYYY-MM-DD') }}</p>
                 </div>
                 <a-button type="primary" class="renew-btn">立即续费</a-button>
+              </div>
+            </div>
+          </div>
+          <div v-else>
+            <div class="section-header">
+              <h3>会员信息</h3>
+            </div>
+            <div class="vip-info">
+              <div class="vip-card">
+                <div class="vip-header">
+                  <UserOutlined />
+                  <span>普通用户</span>
+                </div>
+                <div class="vip-content">
+                  <p>用户编号：{{ userInfo.id }}</p>
+                  <p>会员等级：非会员</p>
+                  <p>到期时间：需要氪金</p>
+                </div>
+                <a-button type="primary" class="renew-btn">立即开通</a-button>
               </div>
             </div>
           </div>
@@ -172,7 +199,9 @@
             :rows="3"
           />
         </a-form-item>
-        <a-form-item label="学习方向">
+        
+        <!--内容暂定-->
+        <!-- <a-form-item label="学习方向">
           <a-input v-model:value="editForm.direction" placeholder="请输入学习方向" />
         </a-form-item>
         <a-form-item label="技术栈">
@@ -184,7 +213,7 @@
             placeholder="请输入学习目标"
             :rows="3"
           />
-        </a-form-item>
+        </a-form-item> -->
       </a-form>
     </a-modal>
   </div>
@@ -196,7 +225,9 @@ import { message } from 'ant-design-vue'
 import { 
   EditOutlined, 
   ShareAltOutlined, 
-  CrownOutlined 
+  CrownOutlined,
+  SettingTwoTone,
+  UserOutlined,
 } from '@ant-design/icons-vue'
 import { getLoginUserUsingGet, updateUserUsingPost } from '@/api/userController'
 import dayjs from 'dayjs'
@@ -210,13 +241,16 @@ const userInfo = ref({
   userAvatar: '',
   userRole: '',
   createTime: '',
-  updateTime: ''
+  updateTime: '',
+  vipCode: '',
+  vipExpireTime: '',
+  vipNumber: '',
 })
 
 // 用户统计数据
 const userStats = ref({
-  rank: 6128,
-  points: 16,
+  photoNum: 0,
+  points: 0,
   likes: 0,
   views: 0,
   following: 0,
@@ -242,6 +276,7 @@ const editForm = reactive({
 // 状态
 const activeTab = ref('basic')
 const showEditModal = ref(false)
+const updataPIN = ref(false)
 
 // 获取用户信息
 const fetchUserInfo = async () => {
@@ -308,7 +343,7 @@ onMounted(() => {
 #userInfoPage {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 40px 20px;
 }
 
 .profile-summary {
@@ -316,16 +351,16 @@ onMounted(() => {
   justify-content: space-between;
   align-items: flex-start;
   background: white;
-  padding: 24px;
-  border-radius: 8px;
+  padding: 32px;
+  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 .profile-left {
   display: flex;
   align-items: flex-start;
-  gap: 24px;
+  gap: 32px;
 }
 
 .avatar-section {
@@ -345,7 +380,7 @@ onMounted(() => {
 .username {
   font-size: 24px;
   font-weight: bold;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -361,12 +396,13 @@ onMounted(() => {
 
 .user-desc {
   color: #666;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  line-height: 1.5;
 }
 
 .user-stats {
   display: flex;
-  gap: 24px;
+  gap: 32px;
   flex-wrap: wrap;
 }
 
@@ -374,7 +410,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .stat-label {
@@ -391,104 +427,115 @@ onMounted(() => {
 .profile-right {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .content-tabs {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .info-section {
-  padding: 24px;
+  padding: 32px;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 12px;
+  margin-bottom: 32px;
+  margin-left: 32px;
+  padding-bottom: 16px;
   border-bottom: 1px solid #f0f0f0;
 }
 
 .section-header h3 {
   margin: 0;
   color: #333;
+  font-size: 18px;
 }
 
 .section-header a {
   color: #1890ff;
   cursor: pointer;
+  font-size: 14px;
 }
 
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
 }
 
 .info-item {
   display: flex;
   align-items: center;
-  padding: 12px;
+  padding: 16px;
   background: #fafafa;
-  border-radius: 6px;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
 }
 
 .info-label {
   font-weight: bold;
   color: #333;
-  min-width: 80px;
+  min-width: 90px;
+  font-size: 14px;
 }
 
 .info-value {
   color: #666;
   flex: 1;
+  font-size: 14px;
 }
 
 .vip-info {
   display: flex;
   justify-content: center;
+  padding: 20px 0;
 }
 
 .vip-card {
   background: linear-gradient(135deg, #ffd700, #ffed4e);
-  padding: 24px;
-  border-radius: 12px;
+  padding: 32px;
+  border-radius: 16px;
   text-align: center;
-  min-width: 300px;
+  min-width: 320px;
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
 }
 
 .vip-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  font-size: 18px;
+  gap: 12px;
+  margin-bottom: 20px;
+  font-size: 20px;
   font-weight: bold;
   color: #333;
 }
 
 .vip-icon {
-  font-size: 24px;
+  font-size: 28px;
   color: #ff6b35;
 }
 
 .vip-content {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .vip-content p {
-  margin: 8px 0;
+  margin: 12px 0;
   color: #333;
+  font-size: 14px;
 }
 
 .renew-btn {
   background: #ff6b35;
   border-color: #ff6b35;
+  height: 40px;
+  font-size: 14px;
 }
 
 .renew-btn:hover {
