@@ -23,9 +23,9 @@
             <div v-if="loginUserStore.loginUser.id">
               <a-dropdown>
                 <ASpace>
-                  <a-avatar 
-                    :src="loginUserStore.loginUser.userAvatar" 
-                    :size="40" 
+                  <a-avatar
+                    :src="loginUserStore.loginUser.userAvatar"
+                    :size="40"
                     :alt="loginUserStore.loginUser.userName || '用户头像'"
                   >
                     {{ (loginUserStore.loginUser.userName || '用户').charAt(0) }}
@@ -66,7 +66,7 @@ import { message, type MenuProps } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
-import { userLogoutUsingPost } from '@/api/userController'
+import { userLogoutUsingPost } from '@/api/yonghuxiangguanjiekou'
 const loginUserStore = useLoginUserStore()
 const current = ref<string[]>([])
 // 菜单列表
@@ -83,10 +83,18 @@ const originItems = [
     title: '用户管理',
   },
   {
-    key: 'others',
-    label: h('a', { href: 'https://www.codefather.cn', target: '_blank' }, '编程导航'),
-    title: '编程导航',
+    key: '/add_picture',
+    label: '创建图片',
+    title: '创建图片',
   },
+  {
+    key: '/admin/pictureManage',
+    label: '图片管理',
+    title: '图片管理',
+  }
+
+
+
 ]
 
 // 过滤菜单项
@@ -133,7 +141,7 @@ const doLogout = async () => {
 
 //个人信息修改
 const userModify = async () => {
-  
+
 }
 
 </script>

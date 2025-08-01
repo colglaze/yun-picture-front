@@ -41,7 +41,7 @@
 
 
 <script lang="ts" setup>
-import { userLoginUsingPost } from '@/api/userController';
+import { userLoginUsingPost } from '@/api/yonghuxiangguanjiekou';
 import { useLoginUserStore } from '@/stores/useLoginUserStore';
 import { message } from 'ant-design-vue';
 import { reactive } from 'vue';

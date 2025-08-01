@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { getLoginUserUsingGet } from '@/api/userController';
+import { getLoginUserUsingGet } from '@/api/yonghuxiangguanjiekou';
 
 export const useLoginUserStore = defineStore('loginUser', () => {
   const loginUser = ref<API.LoginUserVO>({

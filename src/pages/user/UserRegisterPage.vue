@@ -53,7 +53,7 @@
 
 <script lang="ts" setup>
 
-import { userRegisterUsingPost } from '@/api/userController';
+import { userRegisterUsingPost } from '@/api/yonghuxiangguanjiekou';
 import { message } from 'ant-design-vue';
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';

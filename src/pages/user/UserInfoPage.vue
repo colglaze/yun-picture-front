@@ -5,13 +5,19 @@
     <div class="profile-summary">
       <div class="profile-left">
         <div class="avatar-section">
-          <a-avatar 
-            :src="userInfo.userAvatar" 
-            :size="120" 
-            :alt="userInfo.userName || '用户头像'"
-          >
-            {{ (userInfo.userName || '用户').charAt(0) }}
-          </a-avatar>
+          <div class="avatar-wrapper" @click="showAvatarUpload = true">
+            <a-avatar 
+              :src="userInfo.userAvatar" 
+              :size="120" 
+              :alt="userInfo.userName || '用户头像'"
+            >
+              {{ (userInfo.userName || '用户').charAt(0) }}
+            </a-avatar>
+            <div class="avatar-overlay">
+              <CameraOutlined />
+              <span>更换头像</span>
+            </div>
+          </div>
           <div class="vip-badge" v-if="userInfo.vipNumber !== null">
             <a-tag color="gold">VIP</a-tag>
           </div>
@@ -216,11 +222,126 @@
         </a-form-item> -->
       </a-form>
     </a-modal>
+
+    <!-- 头像上传弹窗 -->
+    <a-modal
+      v-model:open="showAvatarUpload"
+      title="更换头像"
+      @ok="handleAvatarUpload"
+      @cancel="handleAvatarCancel"
+      width="600px"
+      :confirm-loading="avatarUploading"
+    >
+      <div class="avatar-upload-content">
+        <div class="current-avatar">
+          <h4>当前头像</h4>
+          <a-avatar 
+            :src="userInfo.userAvatar" 
+            :size="80" 
+            :alt="userInfo.userName || '用户头像'"
+          >
+            {{ (userInfo.userName || '用户').charAt(0) }}
+          </a-avatar>
+        </div>
+        
+        <div class="upload-section">
+          <h4>选择新头像</h4>
+          <a-upload
+            v-model:file-list="avatarFileList"
+            name="avatar"
+            list-type="picture-card"
+            class="avatar-uploader"
+            :show-upload-list="false"
+            :before-upload="beforeAvatarUpload"
+            @change="handleAvatarChange"
+            accept="image/*"
+            :custom-request="() => {}"
+          >
+            <img v-if="avatarImageUrl && selectedFile" :src="avatarImageUrl" alt="avatar" />
+            <div v-else>
+              <loading-outlined v-if="avatarUploading"></loading-outlined>
+              <plus-outlined v-else></plus-outlined>
+              <div class="ant-upload-text">点击上传</div>
+            </div>
+          </a-upload>
+          <div class="upload-tips">
+            <p>支持 JPG、PNG、GIF 格式，文件大小不超过 2MB</p>
+            <p v-if="selectedFile" style="color: #52c41a; margin-top: 8px;">
+              已选择文件：{{ selectedFile.name }}
+            </p>
+          </div>
+        </div>
+
+        <!-- 头像裁剪区域 -->
+        <div v-if="selectedFile && avatarImageUrl" class="crop-section">
+          <h4>调整头像显示区域</h4>
+          <div class="crop-container">
+            <div class="crop-area">
+              <img 
+                :src="avatarImageUrl" 
+                ref="cropImage"
+                @load="initCrop"
+                style="max-width: 100%; max-height: 300px;"
+              />
+            </div>
+            <div class="crop-controls">
+              <div class="control-item">
+                <label>缩放：</label>
+                <a-slider 
+                  v-model:value="cropScale" 
+                  :min="0.5" 
+                  :max="3" 
+                  :step="0.1"
+                  @change="updateCrop"
+                  style="width: 150px;"
+                />
+                <span>{{ cropScale.toFixed(1) }}x</span>
+              </div>
+              <div class="control-item">
+                <label>旋转：</label>
+                <a-slider 
+                  v-model:value="cropRotation" 
+                  :min="-180" 
+                  :max="180" 
+                  :step="15"
+                  @change="updateCrop"
+                  style="width: 150px;"
+                />
+                <span>{{ cropRotation }}°</span>
+              </div>
+              <div class="control-buttons">
+                <a-button @click="resetCrop" size="small">重置</a-button>
+                <a-button @click="previewCrop" type="primary" size="small">预览</a-button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 预览区域 -->
+        <div v-if="showPreview" class="preview-section">
+          <h4>预览效果</h4>
+          <div class="preview-avatars">
+            <div class="preview-item">
+              <span>大尺寸 (120px)</span>
+              <a-avatar :src="croppedImageUrl" :size="120" />
+            </div>
+            <div class="preview-item">
+              <span>中尺寸 (80px)</span>
+              <a-avatar :src="croppedImageUrl" :size="80" />
+            </div>
+            <div class="preview-item">
+              <span>小尺寸 (40px)</span>
+              <a-avatar :src="croppedImageUrl" :size="40" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </a-modal>
   </div>
 </template>
 
-<script lang="ts" setup>
-import { ref, reactive, onMounted } from 'vue'
+<script setup lang="ts">
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { message } from 'ant-design-vue'
 import { 
   EditOutlined, 
@@ -228,9 +349,15 @@ import {
   CrownOutlined,
   SettingTwoTone,
   UserOutlined,
+  CameraOutlined,
+  PlusOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons-vue'
-import { getLoginUserUsingGet, updateUserUsingPost } from '@/api/userController'
+import { getLoginUserUsingGet, updateUserUsingPost } from '@/api/yonghuxiangguanjiekou'
+import { uploadPictureUsingPost } from '@/api/wenjianchuanshu'
 import dayjs from 'dayjs'
+import Cropper from 'cropperjs'
+import 'cropperjs/dist/cropper.css'
 
 // 用户信息
 const userInfo = ref({
@@ -277,6 +404,21 @@ const editForm = reactive({
 const activeTab = ref('basic')
 const showEditModal = ref(false)
 const updataPIN = ref(false)
+const showAvatarUpload = ref(false)
+
+// 头像上传相关
+const avatarFileList = ref([])
+const avatarImageUrl = ref('')
+const avatarUploading = ref(false)
+const selectedFile = ref(null)
+
+// 裁剪相关
+const cropImage = ref(null)
+const cropScale = ref(1)
+const cropRotation = ref(0)
+const showPreview = ref(false)
+const croppedImageUrl = ref('')
+const cropperInstance = ref(null)
 
 // 获取用户信息
 const fetchUserInfo = async () => {
@@ -287,6 +429,8 @@ const fetchUserInfo = async () => {
       // 初始化编辑表单
       editForm.userName = userInfo.value.userName || ''
       editForm.userProfile = userInfo.value.userProfile || ''
+      // 初始化头像预览
+      avatarImageUrl.value = userInfo.value.userAvatar
     }
   } catch (error) {
     message.error('获取用户信息失败')
@@ -333,6 +477,190 @@ const formatTime = (time: string) => {
   return dayjs(time).format('YYYY-MM-DD HH:mm:ss')
 }
 
+// 头像上传前检查
+const beforeAvatarUpload = (file: any) => {
+  const isJPGOrPNG = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/gif'
+  const isLt2M = file.size / 1024 / 1024 < 2
+
+  if (!isJPGOrPNG) {
+    message.error('头像只能是 JPG、PNG 或 GIF 格式!')
+    return false
+  }
+  if (!isLt2M) {
+    message.error('头像大小不能超过 2MB!')
+    return false
+  }
+  
+  // 保存选中的文件
+  selectedFile.value = file
+  return false // 阻止自动上传
+}
+
+// 处理头像选择
+const handleAvatarChange = (info: any) => {
+  if (info.file && selectedFile.value) {
+    // 创建预览URL
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      avatarImageUrl.value = e.target.result as string
+      // 初始化裁剪器
+      nextTick(() => {
+        initCrop()
+      })
+    }
+    reader.readAsDataURL(selectedFile.value)
+  }
+}
+
+// 初始化裁剪器
+const initCrop = () => {
+  if (cropImage.value && avatarImageUrl.value) {
+    // 销毁之前的裁剪器实例
+    if (cropperInstance.value) {
+      cropperInstance.value.destroy()
+    }
+    
+    // 创建新的裁剪器实例
+    cropperInstance.value = new Cropper(cropImage.value, {
+      aspectRatio: 1, // 保持正方形
+      viewMode: 1,
+      background: false,
+      autoCropArea: 0.8,
+      movable: true,
+      zoomable: true,
+      rotatable: true,
+      scalable: true,
+      minContainerWidth: 200,
+      minContainerHeight: 200,
+      minCanvasWidth: 100,
+      minCanvasHeight: 100,
+      ready: () => {
+        // 初始化缩放和旋转
+        const imageData = cropperInstance.value.getImageData()
+        cropScale.value = imageData.scaleX || 1
+        cropRotation.value = imageData.rotate || 0
+      }
+    })
+  }
+}
+
+// 更新裁剪器
+const updateCrop = () => {
+  if (cropperInstance.value) {
+    cropperInstance.value.zoomTo(cropScale.value)
+    cropperInstance.value.rotateTo(cropRotation.value)
+  }
+}
+
+// 重置裁剪器
+const resetCrop = () => {
+  cropScale.value = 1
+  cropRotation.value = 0
+  if (cropperInstance.value) {
+    cropperInstance.value.reset()
+  }
+}
+
+// 预览裁剪结果
+const previewCrop = () => {
+  if (cropperInstance.value) {
+    try {
+      // 获取裁剪后的图片数据
+      const canvas = cropperInstance.value.getCroppedCanvas({
+        width: 200,
+        height: 200,
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high'
+      })
+      
+      croppedImageUrl.value = canvas.toDataURL('image/jpeg', 0.9)
+      showPreview.value = true
+      message.success('预览生成成功')
+    } catch (error) {
+      console.error('生成预览失败:', error)
+      message.error('生成预览失败，请重试')
+    }
+  }
+}
+
+// 处理头像上传
+const handleAvatarUpload = async () => {
+  if (!selectedFile.value) {
+    message.error('请先选择要上传的头像')
+    return
+  }
+
+  avatarUploading.value = true
+  try {
+    let fileToUpload = selectedFile.value
+    
+    // 如果用户进行了裁剪，使用裁剪后的图片
+    if (croppedImageUrl.value && showPreview.value) {
+      // 将base64转换为文件
+      const response = await fetch(croppedImageUrl.value)
+      const blob = await response.blob()
+      fileToUpload = new File([blob], selectedFile.value.name, {
+        type: 'image/jpeg'
+      })
+    }
+    
+    // 上传文件到服务器
+    const res = await uploadPictureUsingPost(
+      {}, // params
+      {}, // body
+      fileToUpload // file
+    )
+    
+    if (res.data.code === 0 && res.data.data) {
+      // 更新用户头像
+      const updateRes = await updateUserUsingPost({
+        id: userInfo.value.id,
+        userAvatar: res.data.data.url
+      })
+      
+      if (updateRes.data.code === 0) {
+        message.success('头像更新成功')
+        await fetchUserInfo() // 刷新用户信息
+        showAvatarUpload.value = false
+        selectedFile.value = null
+        avatarImageUrl.value = userInfo.value.userAvatar
+        showPreview.value = false
+        croppedImageUrl.value = ''
+        
+        // 销毁裁剪器实例
+        if (cropperInstance.value) {
+          cropperInstance.value.destroy()
+          cropperInstance.value = null
+        }
+      } else {
+        message.error('头像更新失败：' + updateRes.data.message)
+      }
+    } else {
+      message.error('头像上传失败：' + res.data.message)
+    }
+  } catch (error) {
+    console.error('头像上传失败:', error)
+    message.error('头像上传失败，请重试')
+  } finally {
+    avatarUploading.value = false
+  }
+}
+
+// 处理头像取消
+const handleAvatarCancel = () => {
+  selectedFile.value = null
+  avatarImageUrl.value = userInfo.value.userAvatar
+  showPreview.value = false
+  croppedImageUrl.value = ''
+  showAvatarUpload.value = false
+  
+  // 销毁裁剪器实例
+  if (cropperInstance.value) {
+    cropperInstance.value.destroy()
+    cropperInstance.value = null
+  }
+}
+
 // 页面加载
 onMounted(() => {
   fetchUserInfo()
@@ -365,6 +693,98 @@ onMounted(() => {
 
 .avatar-section {
   position: relative;
+}
+
+.avatar-wrapper {
+  cursor: pointer;
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e0e0e0;
+}
+
+.avatar-wrapper:hover {
+  border-color: #1890ff;
+}
+
+.avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  color: white;
+  font-size: 14px;
+  gap: 8px;
+}
+
+.avatar-wrapper:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.avatar-overlay i {
+  font-size: 24px;
+}
+
+/* 头像上传样式 */
+.avatar-upload-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.current-avatar {
+  text-align: center;
+}
+
+.current-avatar h4 {
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.upload-section h4 {
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.avatar-uploader {
+  text-align: center;
+}
+
+.avatar-uploader :deep(.ant-upload) {
+  width: 100px !important;
+  height: 100px !important;
+  border-radius: 50% !important;
+}
+
+.avatar-uploader :deep(.ant-upload-select-picture-card) {
+  width: 100px !important;
+  height: 100px !important;
+  border-radius: 50% !important;
+}
+
+.upload-tips {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.upload-tips p {
+  color: #666;
+  font-size: 12px;
+  margin: 0;
 }
 
 .vip-badge {
@@ -541,5 +961,157 @@ onMounted(() => {
 .renew-btn:hover {
   background: #ff5722;
   border-color: #ff5722;
+}
+
+/* 裁剪区域样式 */
+.crop-section {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.crop-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.crop-area {
+  width: 100%;
+  max-width: 400px;
+  height: 300px;
+  overflow: hidden;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  background-color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.crop-area img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.crop-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.control-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.control-item label {
+  font-size: 14px;
+  color: #495057;
+  font-weight: 500;
+  min-width: 60px;
+}
+
+.control-item span {
+  font-size: 12px;
+  color: #6c757d;
+  min-width: 40px;
+  text-align: right;
+}
+
+.control-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.control-buttons .ant-btn {
+  border-radius: 6px;
+  font-size: 13px;
+  height: 32px;
+  padding: 0 16px;
+}
+
+/* 预览区域样式 */
+.preview-section {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.preview-section h4 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: #495057;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.preview-avatars {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.preview-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  min-width: 100px;
+}
+
+.preview-item span {
+  font-size: 12px;
+  color: #6c757d;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .crop-area {
+    height: 250px;
+  }
+  
+  .control-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .control-item label {
+    min-width: auto;
+  }
+  
+  .preview-avatars {
+    gap: 16px;
+  }
+  
+  .preview-item {
+    min-width: 80px;
+  }
 }
 </style>
