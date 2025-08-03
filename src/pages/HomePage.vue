@@ -83,7 +83,7 @@ const loading = ref(true)
 // 搜索条件
 const searchParams = reactive<API.PictureQueryRequest>({
   current: 1,
-  pageSize: 12,
+  pageSize: 15,
   sortField: 'createTime',
   sortOrder: 'descend',
 })
@@ -92,7 +92,7 @@ const searchParams = reactive<API.PictureQueryRequest>({
 const pagination = computed(() => {
   return {
     current: searchParams.current ?? 1,
-    pageSize: searchParams.pageSize ?? 10,
+    pageSize: searchParams.pageSize ?? 15,
     total: total.value,
     // 切换页号时，会修改搜索参数并获取数据
     onChange: (page, pageSize) => {
@@ -124,7 +124,7 @@ const fetchData = async () => {
       params.tags.push(tagList.value[index])
     }
   })
-  
+
   try {
     const res = await listPictureVoByPageUsingPost(params)
     if (res.data.code === 0 && res.data.data) {
@@ -262,19 +262,19 @@ onMounted(() => {
   #homePage {
     padding: 16px;
   }
-  
+
   .picture-card :deep(.ant-card-cover) {
     height: 140px;
   }
-  
+
   .picture-image {
     height: 140px;
   }
-  
+
   .picture-card :deep(.ant-card-body) {
     padding: 12px;
   }
-  
+
   .picture-card :deep(.ant-card-meta-title) {
     font-size: 14px;
   }
@@ -284,19 +284,19 @@ onMounted(() => {
   #homePage {
     padding: 12px;
   }
-  
+
   .picture-card :deep(.ant-card-cover) {
     height: 120px;
   }
-  
+
   .picture-image {
     height: 120px;
   }
-  
+
   .picture-card :deep(.ant-card-body) {
     padding: 10px;
   }
-  
+
   .picture-card :deep(.ant-card-meta-title) {
     font-size: 13px;
   }

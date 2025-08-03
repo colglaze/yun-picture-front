@@ -50,9 +50,9 @@
             />
           </a-form-item>
 
-          <a-form-item label="图片描述" name="description">
+          <a-form-item label="图片描述" name="introduction">
             <a-textarea
-              v-model:value="pictureForm.description"
+              v-model:value="pictureForm.introduction"
               placeholder="请输入图片描述"
               :rows="4"
               :maxlength="500"
@@ -157,7 +157,7 @@ const handleSubmit = async (values: any) => {
     if (res.data.code === 0 && res.data.data) {
       message.success(isEdit ? '更新成功' : '创建成功')
       // 跳转到图片管理页面
-      router.push('/admin/pictureManage')
+      router.push('/')
     } else {
       message.error((isEdit ? '更新' : '创建') + '失败，' + res.data.message)
     }
