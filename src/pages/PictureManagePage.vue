@@ -3,7 +3,11 @@
     <!-- 标题和创建按钮 -->
     <a-flex justify="space-between" align="center" style="margin-bottom: 16px">
       <h2>图片管理</h2>
-      <a-button type="primary" @click="goToCreate">+ 创建图片</a-button>
+      <a-space>
+        <a-button type="primary" @click="goToCreate">+ 创建图片</a-button>
+        <a-button type="primary" @click="goToBatchCreate" ghost>+ 批量创建图片</a-button>
+      </a-space>
+
     </a-flex>
 
     <!-- 搜索表单 -->
@@ -288,6 +292,11 @@ const doTableChange = (page: any) => {
 // 跳转到创建页面
 const goToCreate = () => {
   router.push('/add_picture')
+}
+
+// 跳转到批量创建页面
+const goToBatchCreate = () => {
+  router.push('/batch_add_picture')
 }
 
 // 编辑图片

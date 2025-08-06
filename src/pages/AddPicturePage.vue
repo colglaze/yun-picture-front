@@ -6,13 +6,29 @@
     </div>
 
     <div class="content-layout">
+      <!-- 上传方式切换 -->
+      <div style="margin-bottom: 16px;">
+        <a-radio-group v-model:value="uploadType">
+          <a-radio value="local">本地上传</a-radio>
+          <a-radio value="url">URL上传</a-radio>
+        </a-radio-group>
+      </div>
       <!-- 图片上传区域 - 占满宽度 -->
       <div class="upload-section">
         <h3>图片上传</h3>
-        <UploadPicture
-          :onChange="onPictureChange"
-          :picture="picture"
-        />
+        <template v-if="uploadType === 'local'">
+          <UploadPicture
+            :onChange="onPictureChange"
+            :picture="picture"
+          />
+        </template>
+        <template v-else>
+          <!-- 这里后续替换为你的URL上传组件 -->
+            <UrlPictureUpload
+              :onChange="onPictureChange"
+              :picture="picture"
+            />
+        </template>
       </div>
 
       <!-- 图片预览区域 - 只在有图片时显示 -->
@@ -107,7 +123,12 @@ import { useRouter, useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import UploadPicture from '@/components/UploadPicture.vue'
-import { editPictureUsingPost, getPictureVoByIdUsingGet, listPictureTagCategoryUsingGet } from '@/api/wenjianchuanshu'
+import {
+  editPictureUsingPost,
+  getPictureVoByIdUsingGet,
+  listPictureTagCategoryUsingGet
+} from '@/api/wenjianchuanshu'
+import UrlPictureUpload from '@/components/UrlPictureUpload.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -116,19 +137,23 @@ const route = useRoute()
 const picture = ref<API.PictureVO | undefined>(undefined)
 const pictureForm = reactive<API.PictureEditRequest>({})
 const submitting = ref(false)
+const uploadType = ref<'local' | 'url'>('local')
 
 // 图片变化回调
 const onPictureChange = (newPicture: API.PictureVO) => {
   picture.value = newPicture
   pictureForm.name = newPicture.name
-  message.success('图片上传成功')
+  pictureForm.introduction = newPicture.introduction
+  pictureForm.category = newPicture.category
+  pictureForm.tags = newPicture.tags
+  // message.success('图片上传成功')
 }
 
 /**
  * 提交表单
  * @param values
  */
-const handleSubmit = async (values: any) => {
+const handleSubmit = async (values: API.PictureVO) => {
   // 检查是否已上传图片
   if (!picture.value?.id) {
     message.error('请先上传图片')
@@ -140,19 +165,12 @@ const handleSubmit = async (values: any) => {
 
   try {
     let res
-    if (isEdit) {
-      // 编辑模式：更新图片信息
-      res = await editPictureUsingPost({
-        id: picture.value.id,
-        ...values,
-      })
-    } else {
-      // 新建模式：更新图片信息（上传后自动创建，这里只是更新信息）
-      res = await editPictureUsingPost({
-        id: picture.value.id,
-        ...values,
-      })
-    }
+    // 显式携带 userId 字段
+    res = await editPictureUsingPost({
+      id: picture.value.id,
+      userId: picture.value.userId, // 新增此行
+      ...values,
+    })
 
     if (res.data.code === 0 && res.data.data) {
       message.success(isEdit ? '更新成功' : '创建成功')
