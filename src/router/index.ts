@@ -8,6 +8,7 @@ import PictureManagePage from '@/pages/PictureManagePage.vue'
 import PictureDetailPage from '@/pages/PictureDetailPage.vue'
 import HomePage from '@/pages/HomePage.vue'
 import BatchAddPicturePage from '@/pages/BatchAddPicturePage.vue'
+import FireWelcome from '@/components/FireWelcome.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -58,8 +59,13 @@ const router = createRouter({
       name: '批量上传图片',
       component: BatchAddPicturePage,
       props: true,
-    }
-
+    },
+    {
+      path: '/fire_work',
+      name: '烟花欢迎页',
+      component: FireWelcome,
+      props: true,
+    },
   ],
 })
 

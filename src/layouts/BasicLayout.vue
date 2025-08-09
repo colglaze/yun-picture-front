@@ -10,7 +10,7 @@
       </a-layout-content>
 
       <a-layout-footer class="footer">
-        <a href="">welcom to 子衿云图库</a>
+        <a href="/fire_work">welcom to 子衿云图库</a>
       </a-layout-footer>
     </a-layout>
   </div>
@@ -25,10 +25,11 @@ import GlobalHeader from '@/components/GlobalHeader.vue';
     background: #efefef;
     padding: 16px;
     position: fixed;
-    bottom: 0; 
+    bottom: 0;
     left: 0;
     right: 0;
     text-align: center;
+    z-index: 1000;
 }
 #basicLayout .content {
     background: linear-gradient(to right,#fefefe,#fff);

@@ -35,6 +35,7 @@
           placeholder="请输入标签"
           style="min-width: 180px"
           allow-clear
+          :options="tagOptions"
         />
       </a-form-item>
       <a-form-item label="审核状态" name="reviewStatus">
@@ -140,7 +141,7 @@ import { useRouter } from 'vue-router'
 import { message, Modal } from 'ant-design-vue'
 import dayjs from 'dayjs'
 import {
-  deletePictureUsingPost, doPictureReviewUsingPost, listPictureByPageUsingPost
+  deletePictureUsingPost, doPictureReviewUsingPost, listPictureByPageUsingPost, listPictureTagCategoryUsingGet
 } from '@/api/wenjianchuanshu'
 
 const router = useRouter()
@@ -149,6 +150,7 @@ const router = useRouter()
 const dataList = ref([])
 const total = ref(0)
 const loading = ref(false)
+const tagOptions = ref([]) // 添加tagOptions引用
 
 // 搜索条件
 const searchParams = reactive<API.PictureQueryRequest>({
@@ -156,6 +158,7 @@ const searchParams = reactive<API.PictureQueryRequest>({
   pageSize: 10,
   sortField: 'createTime',
   sortOrder: 'descend',
+  tags: [],
 })
 
 // 分页参数
@@ -397,6 +400,18 @@ const formatTime = (timestamp: string | number | null | undefined) => {
 // 页面加载时请求数据
 onMounted(() => {
   fetchData()
+  // 获取标签选项
+  listPictureTagCategoryUsingGet().then(res => {
+    if (res.data.code === 0 && res.data.data) {
+      tagOptions.value = (res.data.data.tagList || []).map(tag => ({ label: tag, value: tag }))
+      console.log('tagOptions:', tagOptions.value) // 调试用
+    } else {
+      message.error('获取标签失败：' + res.data.message)
+    }
+  }).catch(error => {
+    console.error('获取标签失败:', error)
+    message.error('获取标签失败，请重试')
+  })
 })
 </script>
 
