@@ -67,6 +67,21 @@ export async function getVoByIdUsingPost(
   })
 }
 
+/** 修改用户密码 POST /api/user/get/vo/password */
+export async function updatePasswordUsingPost(
+  body: API.PasswordRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean_>('/api/user/get/vo/password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
 /** 分页查询用户信息 POST /api/user/list/page/vo */
 export async function listUserVoByPageUsingPost(
   body: API.UserQueryRequest,

@@ -52,10 +52,11 @@
 
 <script lang="ts" setup>
 import { deleteUserUsingDelete, listUserVoByPageUsingPost } from '@/api/yonghuxiangguanjiekou'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import { computed, onMounted, reactive, ref } from 'vue'
 import dayjs from 'dayjs'
 import { features } from 'process'
+import { deletePictureUsingPost } from '@/api/wenjianchuanshu'
 
 //数据
 const dataList = ref([])
@@ -167,16 +168,30 @@ const doSearch = () => {
 
 //删除按钮
 const doDelete = async (id:string) => {
-    if(!id){
-        return
-    }
-    const res = await deleteUserUsingDelete({ id })
-    if(res.data.code ===0){
-        message.success('删除成功')
-        fetchData()
-    }else{
+
+  Modal.confirm({
+    title: '确认删除',
+    content: '确定要删除这个用户吗？删除后无法恢复。',
+    okText: '确定',
+    cancelText: '取消',
+    onOk: async () => {
+      try {
+        if(!id){
+            return
+        }
+        const res = await deleteUserUsingDelete({ id })
+        if(res.data.code ===0){
+            message.success('删除成功')
+            fetchData()
+        }else{
+            message.error('删除失败')
+        }
+      } catch (error) {
         message.error('删除失败')
+        console.error('删除图片失败:', error)
+      }
     }
+  })
 }
 </script>
 

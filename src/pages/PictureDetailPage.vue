@@ -85,7 +85,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import {
   DownloadOutlined,
   EditOutlined,
@@ -147,23 +147,32 @@ const doEdit = () => {
 
 // 删除
 const doDelete = async () => {
-  const id = picture.value.id
-  if (!id) {
-    return
-  }
+  Modal.confirm({
+    title: '确认删除',
+    content: '确定要删除这张图片吗？删除后无法恢复。',
+    okText: '确定',
+    cancelText: '取消',
+    onOk: async () => {
+      const id = picture.value.id
+      if (!id) {
+        return
+      }
 
-  try {
-    const res = await deletePictureUsingPost({ id })
-    if (res.data.code === 0) {
-      message.success('删除成功')
-      router.push('/')
-    } else {
-      message.error('删除失败：' + res.data.message)
+      try {
+        const res = await deletePictureUsingPost({ id })
+        if (res.data.code === 0) {
+          message.success('删除成功')
+          router.push('/')
+        } else {
+          message.error('删除失败：' + res.data.message)
+        }
+      } catch (error) {
+        console.error('删除失败:', error)
+        message.error('删除失败，请重试')
+      }
     }
-  } catch (error) {
-    console.error('删除失败:', error)
-    message.error('删除失败，请重试')
-  }
+  })
+
 }
 
 // 处理下载

@@ -45,7 +45,8 @@
               <img
                 class="picture-image"
                 :alt="picture.name"
-                :src="picture.url"
+                :src="picture.thumbnailUrl ?? picture.url"
+                loading="lazy"
               />
             </template>
             <a-card-meta :title="picture.name">
@@ -94,6 +95,7 @@ const pagination = computed(() => {
     current: searchParams.current ?? 1,
     pageSize: searchParams.pageSize ?? 15,
     total: total.value,
+    showSizeChanger: true,
     // 切换页号时，会修改搜索参数并获取数据
     onChange: (page, pageSize) => {
       searchParams.current = page

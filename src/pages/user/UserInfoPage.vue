@@ -6,9 +6,9 @@
       <div class="profile-left">
         <div class="avatar-section">
           <div class="avatar-wrapper" @click="showAvatarUpload = true">
-            <a-avatar 
-              :src="userInfo.userAvatar" 
-              :size="120" 
+            <a-avatar
+              :src="userInfo.userAvatar"
+              :size="120"
               :alt="userInfo.userName || '用户头像'"
             >
               {{ (userInfo.userName || '用户').charAt(0) }}
@@ -28,7 +28,7 @@
             <div v-if="userInfo.vipNumber !== null">
               <span class="user-level">至尊会员</span>
             </div>
-            
+
           </div>
           <div class="user-desc">
             {{ userInfo.userProfile || '暂无个人简介' }}
@@ -66,7 +66,7 @@
           <EditOutlined />
           修改资料
         </a-button>
-        <a-button  @click="updataPIN = true">
+        <a-button  @click="updatePIN = true">
           <SettingTwoTone />
            修改密码
         </a-button>
@@ -74,7 +74,7 @@
           <ShareAltOutlined />
           分享
         </a-button>
-         
+
       </div>
     </div>
 
@@ -119,7 +119,7 @@
             </div>
           </div>
         </a-tab-pane>
-        
+
         <!-- <a-tab-pane key="learning" tab="学习信息">
           <div class="info-section">
             <div class="section-header">
@@ -199,29 +199,36 @@
           <a-input v-model:value="editForm.userName" placeholder="请输入用户名" />
         </a-form-item>
         <a-form-item label="个人简介">
-          <a-textarea 
-            v-model:value="editForm.userProfile" 
+          <a-textarea
+            v-model:value="editForm.userProfile"
             placeholder="请输入个人简介"
             :rows="3"
           />
         </a-form-item>
-        
-        <!--内容暂定-->
-        <!-- <a-form-item label="学习方向">
-          <a-input v-model:value="editForm.direction" placeholder="请输入学习方向" />
-        </a-form-item>
-        <a-form-item label="技术栈">
-          <a-input v-model:value="editForm.techStack" placeholder="请输入技术栈" />
-        </a-form-item>
-        <a-form-item label="学习目标">
-          <a-textarea 
-            v-model:value="editForm.goal" 
-            placeholder="请输入学习目标"
-            :rows="3"
-          />
-        </a-form-item> -->
       </a-form>
     </a-modal>
+
+    <!-- 修改密码弹窗 -->
+    <a-modal
+      v-model:open="updatePIN"
+      title="修改密码"
+      @ok="handleEditPassword"
+      @cancel="updatePIN = false"
+      width="600px"
+    >
+      <a-form :model="passwordForm" layout="vertical">
+        <a-form-item label="原密码">
+          <a-input-password v-model:value="passwordForm.userPassword" placeholder="请输入原密码" />
+        </a-form-item>
+        <a-form-item label="新密码">
+          <a-input-password v-model:value="passwordForm.newPassword" placeholder="请输入新密码" />
+        </a-form-item>
+        <a-form-item label="确认密码">
+          <a-input-password v-model:value="passwordForm.checkPassword" placeholder="请确认密码" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+
 
     <!-- 头像上传弹窗 -->
     <a-modal
@@ -235,15 +242,15 @@
       <div class="avatar-upload-content">
         <div class="current-avatar">
           <h4>当前头像</h4>
-          <a-avatar 
-            :src="userInfo.userAvatar" 
-            :size="80" 
+          <a-avatar
+            :src="userInfo.userAvatar"
+            :size="80"
             :alt="userInfo.userName || '用户头像'"
           >
             {{ (userInfo.userName || '用户').charAt(0) }}
           </a-avatar>
         </div>
-        
+
         <div class="upload-section">
           <h4>选择新头像</h4>
           <a-upload
@@ -277,8 +284,8 @@
           <h4>调整头像显示区域</h4>
           <div class="crop-container">
             <div class="crop-area">
-              <img 
-                :src="avatarImageUrl" 
+              <img
+                :src="avatarImageUrl"
                 ref="cropImage"
                 @load="initCrop"
                 style="max-width: 100%; max-height: 300px;"
@@ -287,10 +294,10 @@
             <div class="crop-controls">
               <div class="control-item">
                 <label>缩放：</label>
-                <a-slider 
-                  v-model:value="cropScale" 
-                  :min="0.5" 
-                  :max="3" 
+                <a-slider
+                  v-model:value="cropScale"
+                  :min="0.5"
+                  :max="3"
                   :step="0.1"
                   @change="updateCrop"
                   style="width: 150px;"
@@ -299,10 +306,10 @@
               </div>
               <div class="control-item">
                 <label>旋转：</label>
-                <a-slider 
-                  v-model:value="cropRotation" 
-                  :min="-180" 
-                  :max="180" 
+                <a-slider
+                  v-model:value="cropRotation"
+                  :min="-180"
+                  :max="180"
                   :step="15"
                   @change="updateCrop"
                   style="width: 150px;"
@@ -343,9 +350,9 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { message } from 'ant-design-vue'
-import { 
-  EditOutlined, 
-  ShareAltOutlined, 
+import {
+  EditOutlined,
+  ShareAltOutlined,
   CrownOutlined,
   SettingTwoTone,
   UserOutlined,
@@ -353,11 +360,17 @@ import {
   PlusOutlined,
   LoadingOutlined,
 } from '@ant-design/icons-vue'
-import { getLoginUserUsingGet, updateUserUsingPost } from '@/api/yonghuxiangguanjiekou'
+import {
+  getLoginUserUsingGet,
+  updatePasswordUsingPost,
+  updateUserUsingPost,
+  userLogoutUsingPost
+} from '@/api/yonghuxiangguanjiekou'
 import { uploadPictureUsingPost } from '@/api/wenjianchuanshu'
 import dayjs from 'dayjs'
 import Cropper from 'cropperjs'
 import 'cropperjs/dist/cropper.css'
+import router from '@/router'
 
 // 用户信息
 const userInfo = ref({
@@ -384,12 +397,6 @@ const userStats = ref({
   fans: 0
 })
 
-// 学习信息
-const learningInfo = ref({
-  direction: '',
-  techStack: '',
-  goal: ''
-})
 
 // 编辑表单
 const editForm = reactive({
@@ -400,10 +407,43 @@ const editForm = reactive({
   goal: ''
 })
 
+//密码修改
+const handleEditPassword = async () => {
+  if (passwordForm.newPassword !== passwordForm.checkPassword) {
+    message.error('新密码和确认密码不一致')
+    return
+  }
+  try {
+    const res = await updatePasswordUsingPost({
+      userPassword: passwordForm.userPassword,
+      newPassword: passwordForm.newPassword,
+      checkPassword: passwordForm.checkPassword
+    })
+    if (res.data.code === 0) {
+      message.success('密码更新成功，请重新登录')
+      updatePIN.value = false
+      //刷新页面
+      await userLogoutUsingPost()
+      // 清除用户信息，跳转到登录页
+      await router.push('/user/login')
+      window.location.reload()
+    } else {
+      message.error('密码更新失败：' + res.data.message)
+    }
+  } catch (error) {
+    message.error('密码更新失败')
+  }
+}
+const passwordForm = reactive({
+  userPassword: '',
+  newPassword: '',
+  checkPassword: ''
+})
+
 // 状态
 const activeTab = ref('basic')
 const showEditModal = ref(false)
-const updataPIN = ref(false)
+const updatePIN = ref(false)
 const showAvatarUpload = ref(false)
 
 // 头像上传相关
@@ -490,7 +530,7 @@ const beforeAvatarUpload = (file: any) => {
     message.error('头像大小不能超过 2MB!')
     return false
   }
-  
+
   // 保存选中的文件
   selectedFile.value = file
   return false // 阻止自动上传
@@ -519,7 +559,7 @@ const initCrop = () => {
     if (cropperInstance.value) {
       cropperInstance.value.destroy()
     }
-    
+
     // 创建新的裁剪器实例
     cropperInstance.value = new Cropper(cropImage.value, {
       aspectRatio: 1, // 保持正方形
@@ -572,7 +612,7 @@ const previewCrop = () => {
         imageSmoothingEnabled: true,
         imageSmoothingQuality: 'high'
       })
-      
+
       croppedImageUrl.value = canvas.toDataURL('image/jpeg', 0.9)
       showPreview.value = true
       message.success('预览生成成功')
@@ -593,7 +633,7 @@ const handleAvatarUpload = async () => {
   avatarUploading.value = true
   try {
     let fileToUpload = selectedFile.value
-    
+
     // 如果用户进行了裁剪，使用裁剪后的图片
     if (croppedImageUrl.value && showPreview.value) {
       // 将base64转换为文件
@@ -603,21 +643,21 @@ const handleAvatarUpload = async () => {
         type: 'image/jpeg'
       })
     }
-    
+
     // 上传文件到服务器
     const res = await uploadPictureUsingPost(
       {}, // params
       {}, // body
       fileToUpload // file
     )
-    
+
     if (res.data.code === 0 && res.data.data) {
       // 更新用户头像
       const updateRes = await updateUserUsingPost({
         id: userInfo.value.id,
         userAvatar: res.data.data.url
       })
-      
+
       if (updateRes.data.code === 0) {
         message.success('头像更新成功')
         await fetchUserInfo() // 刷新用户信息
@@ -626,7 +666,7 @@ const handleAvatarUpload = async () => {
         avatarImageUrl.value = userInfo.value.userAvatar
         showPreview.value = false
         croppedImageUrl.value = ''
-        
+
         // 销毁裁剪器实例
         if (cropperInstance.value) {
           cropperInstance.value.destroy()
@@ -653,7 +693,7 @@ const handleAvatarCancel = () => {
   showPreview.value = false
   croppedImageUrl.value = ''
   showAvatarUpload.value = false
-  
+
   // 销毁裁剪器实例
   if (cropperInstance.value) {
     cropperInstance.value.destroy()
@@ -1095,21 +1135,21 @@ onMounted(() => {
   .crop-area {
     height: 250px;
   }
-  
+
   .control-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .control-item label {
     min-width: auto;
   }
-  
+
   .preview-avatars {
     gap: 16px;
   }
-  
+
   .preview-item {
     min-width: 80px;
   }

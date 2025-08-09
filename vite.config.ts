@@ -13,7 +13,7 @@ export default defineConfig({
     },
   },
   server: {
-    allowedHosts: ['347a211c.r12.cpolar.top'],
+    allowedHosts: ['49b0aa4c.r12.cpolar.top'],
   },
 })
 
