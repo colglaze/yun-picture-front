@@ -223,6 +223,7 @@ declare namespace API {
     id?: number
     introduction?: string
     name?: string
+    spaceId?: number
     tags?: string[]
   }
 
@@ -265,6 +266,7 @@ declare namespace API {
     id?: number
     introduction?: string
     name?: string
+    spaceId?: number
     tags?: string[]
   }
 

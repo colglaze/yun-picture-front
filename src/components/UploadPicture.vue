@@ -42,12 +42,23 @@ const handleUpload = async (options: any) => {
   loading.value = true
 
   try {
-    // 调用上传API
+    // 1. 创建FormData对象
+    const formData = new FormData();
+
+    // 3. 添加PictureUploadRequest的业务参数（键名需与后端实体类字段名一致）
+    // 假设PictureUploadRequest有name、type、description等字段
+    formData.append("id", "图片id");
+    formData.append("fileUrl", "图片地址");
+    formData.append("picName", "图片名称");
+    formData.append("spaceId","空间id")
+
+    // 4. 发送请求（无需手动设置Content-Type，浏览器会自动处理）
     const res = await uploadPictureUsingPost(
-      {}, // params
-      {}, // body
-      file // file
-    )
+      {}, // 路径参数（若有）
+      formData, // 请求体：FormData对象
+      file,
+      {} // 若函数封装要求，可留空
+    );
 
     if (res.data.code === 0 && res.data.data) {
       const uploadedPicture = res.data.data

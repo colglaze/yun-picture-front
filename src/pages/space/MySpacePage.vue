@@ -1,32 +1,91 @@
 <template>
   <div id="mySpacePage">
-    <!-- 空间信息小卡片 - 右上角 -->
-    <div v-if="space.id" class="space-info-corner">
-      <a-card size="small" class="space-mini-card">
-        <div class="space-mini-content">
-          <div class="space-mini-header">
-            <h3>{{ space.spaceName }}</h3>
-            <a-button type="primary" size="small" @click="goToCreatePicture">
-              <PlusOutlined />
-              创建图片
-            </a-button>
+    <!-- 空间信息布局 - 分散式设计 -->
+    <div v-if="space.id" class="space-info-layout">
+      <!-- 左上角：空间名称和创建按钮 -->
+      <div class="space-info-left">
+        <div class="space-name-section">
+          <h2 class="space-name">{{ space.spaceName }}</h2>
+          <a-button type="primary" size="small" @click="goToCreatePicture" class="create-btn">
+            <PlusOutlined />
+            创建图片
+          </a-button>
+        </div>
+      </div>
+
+      <!-- 右上角：空间统计信息 -->
+      <div class="space-info-right">
+        <div class="space-stats">
+          <div class="stat-item">
+            <span class="stat-label">图片:</span>
+            <span class="stat-value">{{ total }}/{{ space.maxCount || 0 }}</span>
           </div>
-          <div class="space-mini-stats">
-            <div class="stat-item">
-              <span class="stat-label">图片:</span>
-              <span class="stat-value">{{ total }}/{{ space.maxCount || 0 }}</span>
+          <div class="stat-item">
+            <span class="stat-label">空间:</span>
+            <span class="stat-value">{{ formatSize(space.totalSize || 0) }}/{{ formatSize(space.maxSize || 0) }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">使用率:</span>
+            <span class="stat-value" :style="{ color: spaceUsageColor }">{{ spaceUsagePercent }}%</span>
+          </div>
+        </div>
+
+        <!-- 隐藏式详细信息按钮 -->
+        <a-button
+          type="text"
+          size="small"
+          @click="showSpaceDetail = !showSpaceDetail"
+          class="detail-toggle-btn"
+        >
+          <template #icon>
+            <component :is="showSpaceDetail ? 'UpOutlined' : 'DownOutlined'" />
+          </template>
+          {{ showSpaceDetail ? '收起' : '详情' }}
+        </a-button>
+      </div>
+
+      <!-- 隐藏式详细信息面板 -->
+      <div v-if="showSpaceDetail" class="space-detail-panel">
+        <div class="detail-content">
+          <div class="detail-section">
+            <h4>空间详情</h4>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="detail-label">空间ID:</span>
+                <span class="detail-value">{{ space.id }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">创建时间:</span>
+                <span class="detail-value">{{ formatTime(space.createTime) }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">更新时间:</span>
+                <span class="detail-value">{{ formatTime(space.updateTime) }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">空间描述:</span>
+                <span class="detail-value">{{ space.spaceDescription || '暂无描述' }}</span>
+              </div>
             </div>
-            <div class="stat-item">
-              <span class="stat-label">空间:</span>
-              <span class="stat-value">{{ formatSize(space.totalSize || 0) }}/{{ formatSize(space.maxSize || 0) }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">使用率:</span>
-              <span class="stat-value" :style="{ color: spaceUsageColor }">{{ spaceUsagePercent }}%</span>
+          </div>
+
+          <div class="detail-section">
+            <h4>使用统计</h4>
+            <div class="usage-progress">
+              <div class="progress-info">
+                <span>空间使用进度</span>
+                <span>{{ spaceUsagePercent.toFixed(1) }}%</span>
+              </div>
+              <a-progress
+                :percent="spaceUsagePercent"
+                :stroke-color="spaceUsageColor"
+                :show-info="false"
+                size="small"
+              />
             </div>
           </div>
         </div>
-      </a-card>
+      </div>
     </div>
 
     <!-- 搜索框 -->
@@ -113,15 +172,15 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, UpOutlined, DownOutlined } from '@ant-design/icons-vue'
 import { Empty } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
-import { 
+import {
   listSpaceByPageUsingPost
 } from '@/api/kongjianguanli'
-import { 
-  listPictureVoByPageUsingPost, 
-  listPictureTagCategoryUsingGet 
+import {
+  listPictureVoByPageUsingPost,
+  listPictureTagCategoryUsingGet
 } from '@/api/wenjianchuanshu'
 
 const router = useRouter()
@@ -130,6 +189,7 @@ const loginUserStore = useLoginUserStore()
 // 空间信息
 const space = ref<API.SpaceVO>({})
 const spaceLoading = ref(true)
+const showSpaceDetail = ref(false)
 
 // 图片数据
 const dataList = ref<API.PictureVO[]>([])
@@ -172,7 +232,7 @@ const fetchUserSpace = async () => {
     spaceLoading.value = true
     const loginUser = loginUserStore.loginUser
     console.log('当前登录用户:', loginUser)
-    
+
     if (!loginUser?.id) {
       console.log('用户未登录，跳转到登录页面')
       router.replace('/user/login')
@@ -185,7 +245,7 @@ const fetchUserSpace = async () => {
       current: 1,
       pageSize: 1,
     })
-    
+
     console.log('空间信息API响应:', res)
 
     if (res.data.code === 0 && res.data.data?.records?.length > 0) {
@@ -215,14 +275,14 @@ const fetchCategoryAndTags = async () => {
     console.log('开始获取分类和标签数据')
     const res = await listPictureTagCategoryUsingGet()
     console.log('分类标签API响应:', res)
-    
+
     if (res.data.code === 0 && res.data.data) {
       categoryList.value = res.data.data.categoryList || []
       tagList.value = res.data.data.tagList || []
-      
+
       console.log('获取到分类:', categoryList.value)
       console.log('获取到标签:', tagList.value)
-      
+
       // 初始化选中标签数组
       selectedTagList.value = new Array(tagList.value.length).fill(false)
     } else {
@@ -239,33 +299,33 @@ const fetchData = async () => {
     console.log('空间ID不存在，无法获取图片数据')
     return
   }
-  
+
   try {
     loading.value = true
     console.log('开始获取图片数据，空间ID:', space.value.id)
-    
+
     // 构建搜索参数，与主页保持一致
     const params = {
       spaceId: space.value.id,
       ...searchParams,
       tags: [],
     }
-    
+
     if (selectedCategory.value !== 'all') {
       params.category = selectedCategory.value
     }
-    
+
     selectedTagList.value.forEach((useTag, index) => {
       if (useTag) {
         params.tags.push(tagList.value[index])
       }
     })
-    
+
     console.log('发送请求参数:', params)
 
     const res = await listPictureVoByPageUsingPost(params)
     console.log('API响应:', res)
-    
+
     if (res.data.code === 0 && res.data.data) {
       dataList.value = res.data.data.records || []
       total.value = res.data.data.total || 0
@@ -312,6 +372,18 @@ const formatSize = (bytes: number) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
+// 格式化时间
+const formatTime = (time: string | number | undefined) => {
+  if (!time) return '未知'
+  if (typeof time === 'string') {
+    return new Date(time).toLocaleString('zh-CN')
+  }
+  if (typeof time === 'number') {
+    return new Date(time).toLocaleString('zh-CN')
+  }
+  return '未知'
+}
+
 // 计算空间使用率百分比
 const spaceUsagePercent = computed(() => {
   if (space.value.maxSize === 0) return 0
@@ -332,7 +404,7 @@ onMounted(async () => {
     // 先获取登录用户信息
     await loginUserStore.fetchLoginUser()
     console.log('登录用户信息:', loginUserStore.loginUser)
-    
+
     // 再获取用户空间信息
     await fetchUserSpace()
     // 最后获取分类和标签数据
@@ -348,65 +420,169 @@ onMounted(async () => {
   padding: 24px;
   max-width: 1200px;
   margin: 0 auto;
-  position: relative; /* 为绝对定位的子元素提供参考 */
 }
 
-/* 右上角空间信息卡片样式 */
-.space-info-corner {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  z-index: 10;
-  width: 280px;
-}
-
-.space-mini-card {
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  border: none;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.space-mini-content {
-  padding: 16px;
-}
-
-.space-mini-header {
+/* 空间信息布局样式 */
+.space-info-layout {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 16px;
+  border: 1px solid #dee2e6;
+}
+
+/* 左侧：空间名称和创建按钮 */
+.space-info-left {
+  flex: 1;
+}
+
+.space-name-section {
+  display: flex;
   align-items: center;
-  margin-bottom: 16px;
+  gap: 16px;
 }
-
-.space-mini-header h3 {
+.space-name {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: white;
+  font-size: 24px;
+  font-weight: 700;
+  color: #2c3e50;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.space-mini-stats {
+.create-btn {
+  height: 36px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* 右侧：统计信息和详情按钮 */
+.space-info-right {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.space-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
 }
 
 .stat-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .stat-label {
-  color: rgba(255, 255, 255, 0.8);
+  color: #6c757d;
   font-weight: 500;
 }
 
 .stat-value {
-  color: white;
+  color: #2c3e50;
   font-weight: 600;
+}
+
+.detail-toggle-btn {
+  color: #667eea;
+  font-size: 12px;
+  height: 28px;
+  padding: 0 12px;
+}
+
+/* 隐藏式详细信息面板 */
+.space-detail-panel {
+  width: 100%;
+  margin-top: 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.detail-content {
+  padding: 20px;
+}
+
+.detail-section {
+  margin-bottom: 20px;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  border-bottom: 2px solid #ecf0f1;
+  padding-bottom: 8px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.detail-label {
+  color: #6c757d;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.detail-value {
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.usage-progress {
+  margin-top: 8px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #6c757d;
 }
 
 .search-bar {
@@ -482,12 +658,24 @@ onMounted(async () => {
     padding: 16px;
   }
 
-  .space-info-corner {
-    position: relative;
-    top: auto;
-    right: auto;
+  .space-info-layout {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .space-info-left {
     width: 100%;
-    margin-bottom: 20px;
+  }
+
+  .space-info-right {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .space-stats {
+    min-width: auto;
+    width: 100%;
   }
 
   .search-bar {
@@ -521,8 +709,12 @@ onMounted(async () => {
     padding: 12px;
   }
 
-  .space-info-corner {
-    margin-bottom: 16px;
+  .space-info-layout {
+    padding: 12px;
+  }
+
+  .space-name {
+    font-size: 20px;
   }
 
   .search-bar {
