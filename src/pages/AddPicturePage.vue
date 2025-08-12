@@ -1,8 +1,19 @@
 <template>
   <div id="addPicturePage">
+
     <div class="page-header">
       <h1>{{ route.query?.id ? '编辑图片' : '创建图片' }}</h1>
       <p>{{ route.query?.id ? '修改图片信息和标签' : '上传新图片并添加信息' }}</p>
+      <a-typography-paragraph v-if="spaceId" type="secondary">
+        <template v-if="spaceId === '-1'">
+          保存至公共空间
+        </template>
+        <template v-else>
+          保存至空间：<a :href="`/space/${spaceId}`" target="_blank">{{ spaceId }}</a>
+        </template>
+      </a-typography-paragraph>
+
+
     </div>
 
     <div class="content-layout">
@@ -118,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
@@ -168,6 +179,7 @@ const handleSubmit = async (values: API.PictureVO) => {
     // 显式携带 userId 字段
     res = await editPictureUsingPost({
       id: picture.value.id,
+      spaceId:spaceId.value,
       userId: picture.value.userId, // 新增此行
       ...values,
     })
@@ -245,6 +257,12 @@ const formatFileSize = (size: number) => {
     return (size / (1024 * 1024)).toFixed(2) + ' MB'
   }
 }
+
+// 空间 id
+const spaceId = computed(() => {
+  return route.query?.spaceId
+})
+
 
 onMounted(() => {
   getTagCategoryOptions()

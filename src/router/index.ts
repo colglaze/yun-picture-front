@@ -4,11 +4,15 @@ import UserRegisterPage from '@/pages/user/UserRegisterPage.vue'
 import UserManagePage from '@/pages/admin/UserManagePage.vue'
 import UserInfoPage from '@/pages/user/UserInfoPage.vue'
 import AddPicturePage from '@/pages/AddPicturePage.vue'
-import PictureManagePage from '@/pages/PictureManagePage.vue'
+import PictureManagePage from '@/pages/admin/PictureManagePage.vue'
 import PictureDetailPage from '@/pages/PictureDetailPage.vue'
 import HomePage from '@/pages/HomePage.vue'
 import BatchAddPicturePage from '@/pages/BatchAddPicturePage.vue'
 import FireWelcome from '@/components/FireWelcome.vue'
+import MySpacePage from '@/pages/space/MySpacePage.vue'
+import SpaceDetailPage from '@/pages/space/SpaceDetailPage.vue'
+import AddSpacePage from '@/pages/space/AddSpacePage.vue'
+import SpaceManage from '@/pages/space/SpaceManage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -65,6 +69,27 @@ const router = createRouter({
       name: '烟花欢迎页',
       component: FireWelcome,
       props: true,
+    },
+    {
+      path: '/admin/spaceManage',
+      name: '空间管理',
+      component: SpaceManage,
+    },
+    {
+      path: '/my_space',
+      name: '我的空间',
+      component: MySpacePage,
+    },
+    {
+      path: '/space/:id',
+      name: '空间详情',
+      component: SpaceDetailPage,
+      props: true,
+    },
+    {
+      path: '/add_space',
+      name: '创建空间',
+      component: AddSpacePage,
     },
   ],
 })

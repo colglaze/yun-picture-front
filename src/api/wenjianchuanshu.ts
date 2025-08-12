@@ -2,6 +2,21 @@
 /* eslint-disable */
 import request from '@/request'
 
+/** 获取当前版本号（调试用） GET /api/file/debug/versions */
+export async function getCurrentVersionsUsingGet(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.getCurrentVersionsUsingGETParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseMapStringLong_>('/api/file/debug/versions', {
+    method: 'GET',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  })
+}
+
 /** 删除图片 POST /api/file/delete */
 export async function deletePictureUsingPost(
   body: API.DeleteRequest,
