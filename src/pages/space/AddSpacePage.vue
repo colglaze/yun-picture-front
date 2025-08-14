@@ -4,11 +4,11 @@ import { SPACE_LEVEL_ENUM, SPACE_LEVEL_OPTIONS } from '@/constants/space'
 import { onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import router from '@/router'
-import { 
-  createSpaceUsingPost, 
-  getSpaceVoByIdUsingGet, 
+import {
+  createSpaceUsingPost,
+  getSpaceVoByIdUsingGet,
   listSpaceLevelUsingGet,
-  updateSpaceUsingDelete 
+  updateSpaceUsingDelete
 } from '@/api/kongjianguanli'
 import { useRoute } from 'vue-router'
 
@@ -94,6 +94,8 @@ onMounted(async () => {
   ])
 })
 
+const showWeixin = ref(false)
+
 </script>
 
 <template>
@@ -121,13 +123,16 @@ onMounted(async () => {
     <a-card title="空间级别介绍">
       <a-typography-paragraph>
         * 目前仅支持开通普通版，如需升级空间，请联系
-        <a href="https://codefather.cn" target="_blank">程序员鱼皮</a>。
+        <a @click="showWeixin = true" style="cursor:pointer;color:#1677ff;">风间琉璃</a>。
       </a-typography-paragraph>
       <a-typography-paragraph v-for="spaceLevel in spaceLevelList">
         {{ spaceLevel.text }}： 大小 {{ formatSize(spaceLevel.maxSize) }}， 数量
         {{ spaceLevel.maxCount }}
       </a-typography-paragraph>
     </a-card>
+    <a-modal v-model:visible="showWeixin" title="微信二维码" footer="子衿云图库">
+      <img src="/src/assets/weixin.jpg" alt="微信二维码" style="width:100%;max-width:320px;display:block;margin:0 auto;" />
+    </a-modal>
   </div>
 
 

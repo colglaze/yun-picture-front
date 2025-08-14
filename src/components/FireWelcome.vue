@@ -448,7 +448,7 @@ canvas {
 .welcome-text {
   position: absolute;
   top: 35%; /* 距离顶部更小 */
-  left: 50%;
+  left: 42%;
   transform: translate(-50%, -50%);
   text-align: center;
   z-index: 3;

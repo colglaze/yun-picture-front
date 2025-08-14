@@ -159,7 +159,7 @@
                   <p>会员等级：VIP</p>
                   <p>到期时间：{{ dayjs(userInfo.vipExpireTime).format('YYYY-MM-DD') }}</p>
                 </div>
-                <a-button type="primary" class="renew-btn">立即续费</a-button>
+                <a-button type="primary" class="renew-btn" @click="showWeixin = true">立即续费</a-button>
               </div>
             </div>
           </div>
@@ -178,13 +178,17 @@
                   <p>会员等级：非会员</p>
                   <p>到期时间：需要氪金</p>
                 </div>
-                <a-button type="primary" class="renew-btn">立即开通</a-button>
+                <a-button type="primary" class="renew-btn" @click="showWeixin = true">立即开通</a-button>
               </div>
             </div>
           </div>
         </a-tab-pane>
       </a-tabs>
     </div>
+
+    <a-modal v-model:visible="showWeixin" title="微信二维码" footer="子衿云图库">
+      <img src="/src/assets/weixin.jpg" alt="微信二维码" style="width:100%;max-width:320px;display:block;margin:0 auto;" />
+    </a-modal>
 
     <!-- 编辑信息弹窗 -->
     <a-modal
@@ -372,6 +376,7 @@ import Cropper from 'cropperjs'
 import 'cropperjs/dist/cropper.css'
 import router from '@/router'
 
+const showWeixin = ref(false)
 // 用户信息
 const userInfo = ref({
   id: '',
@@ -632,14 +637,14 @@ const handleAvatarUpload = async () => {
 
   avatarUploading.value = true
   try {
-    let fileToUpload = selectedFile.value
+    let file = selectedFile.value
 
     // 如果用户进行了裁剪，使用裁剪后的图片
     if (croppedImageUrl.value && showPreview.value) {
       // 将base64转换为文件
       const response = await fetch(croppedImageUrl.value)
       const blob = await response.blob()
-      fileToUpload = new File([blob], selectedFile.value.name, {
+      file = new File([blob], selectedFile.value.name, {
         type: 'image/jpeg'
       })
     }
@@ -647,8 +652,6 @@ const handleAvatarUpload = async () => {
     // 1. 创建FormData对象
     const formData = new FormData();
 
-    // 2. 添加文件（键名"file"需与后端@RequestPart("file")一致）
-    formData.append("file", fileToUpload);
 
     // 3. 添加PictureUploadRequest的业务参数（键名需与后端实体类字段名一致）
     // 假设PictureUploadRequest有name、type、description等字段
@@ -661,6 +664,7 @@ const handleAvatarUpload = async () => {
     const res = await uploadPictureUsingPost(
       {}, // 路径参数（若有）
       formData, // 请求体：FormData对象
+      file,
       {} // 若函数封装要求，可留空
     );
 

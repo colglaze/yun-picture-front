@@ -1,90 +1,23 @@
 <template>
   <div id="mySpacePage">
-    <!-- 空间信息布局 - 分散式设计 -->
-    <div v-if="space.id" class="space-info-layout">
-      <!-- 左上角：空间名称和创建按钮 -->
-      <div class="space-info-left">
-        <div class="space-name-section">
-          <h2 class="space-name">{{ space.spaceName }}</h2>
-          <a-button type="primary" size="small" @click="goToCreatePicture" class="create-btn">
-            <PlusOutlined />
-            创建图片
-          </a-button>
-        </div>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="space-name-section">
+        <h2 class="space-name">{{ space.spaceName }}</h2>
       </div>
-
-      <!-- 右上角：空间统计信息 -->
-      <div class="space-info-right">
-        <div class="space-stats">
-          <div class="stat-item">
-            <span class="stat-label">图片:</span>
-            <span class="stat-value">{{ total }}/{{ space.maxCount || 0 }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">空间:</span>
-            <span class="stat-value">{{ formatSize(space.totalSize || 0) }}/{{ formatSize(space.maxSize || 0) }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">使用率:</span>
-            <span class="stat-value" :style="{ color: spaceUsageColor }">{{ spaceUsagePercent }}%</span>
-          </div>
-        </div>
-
-        <!-- 隐藏式详细信息按钮 -->
-        <a-button
-          type="text"
-          size="small"
-          @click="showSpaceDetail = !showSpaceDetail"
-          class="detail-toggle-btn"
-        >
-          <template #icon>
-            <component :is="showSpaceDetail ? 'UpOutlined' : 'DownOutlined'" />
-          </template>
-          {{ showSpaceDetail ? '收起' : '详情' }}
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <a-button type="primary" size="small" @click="goToCreatePicture" class="create-btn">
+          <PlusOutlined />
+          创建图片
         </a-button>
-      </div>
-
-      <!-- 隐藏式详细信息面板 -->
-      <div v-if="showSpaceDetail" class="space-detail-panel">
-        <div class="detail-content">
-          <div class="detail-section">
-            <h4>空间详情</h4>
-            <div class="detail-grid">
-              <div class="detail-item">
-                <span class="detail-label">空间ID:</span>
-                <span class="detail-value">{{ space.id }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">创建时间:</span>
-                <span class="detail-value">{{ formatTime(space.createTime) }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">更新时间:</span>
-                <span class="detail-value">{{ formatTime(space.updateTime) }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">空间描述:</span>
-                <span class="detail-value">{{ space.spaceDescription || '暂无描述' }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="detail-section">
-            <h4>使用统计</h4>
-            <div class="usage-progress">
-              <div class="progress-info">
-                <span>空间使用进度</span>
-                <span>{{ spaceUsagePercent.toFixed(1) }}%</span>
-              </div>
-              <a-progress
-                :percent="spaceUsagePercent"
-                :stroke-color="spaceUsageColor"
-                :show-info="false"
-                size="small"
-              />
-            </div>
-          </div>
-        </div>
+        <a-tooltip
+          :title="`占用空间 ${formatSize(space.totalSize)} / ${formatSize(space.maxSize)}`"
+        >
+          <a-progress
+            type="circle"
+            :percent="((space.totalSize * 100) / space.maxSize).toFixed(1)"
+            :size="42"
+          />
+        </a-tooltip>
       </div>
     </div>
 
@@ -172,7 +105,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { PlusOutlined, UpOutlined, DownOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined } from '@ant-design/icons-vue'
 import { Empty } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import {
@@ -183,13 +116,13 @@ import {
   listPictureTagCategoryUsingGet
 } from '@/api/wenjianchuanshu'
 
+
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
 
 // 空间信息
 const space = ref<API.SpaceVO>({})
 const spaceLoading = ref(true)
-const showSpaceDetail = ref(false)
 
 // 图片数据
 const dataList = ref<API.PictureVO[]>([])
@@ -364,38 +297,14 @@ const goToCreatePicture = () => {
 }
 
 // 格式化文件大小
-const formatSize = (bytes: number) => {
-  if (bytes === 0) return '0 B'
+const formatSize = (size: number) => {
+  if (size === 0) return '0 KB'
   const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  const sizes = ['KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(size) / Math.log(k))
+  console.log("******************",size);
+  return parseFloat((size / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i - 1]
 }
-
-// 格式化时间
-const formatTime = (time: string | number | undefined) => {
-  if (!time) return '未知'
-  if (typeof time === 'string') {
-    return new Date(time).toLocaleString('zh-CN')
-  }
-  if (typeof time === 'number') {
-    return new Date(time).toLocaleString('zh-CN')
-  }
-  return '未知'
-}
-
-// 计算空间使用率百分比
-const spaceUsagePercent = computed(() => {
-  if (space.value.maxSize === 0) return 0
-  return ((space.value.totalSize || 0) / (space.value.maxSize || 0)) * 100
-})
-
-// 空间使用率颜色
-const spaceUsageColor = computed(() => {
-  if (spaceUsagePercent.value >= 80) return '#ff4d4f' // 红色
-  if (spaceUsagePercent.value >= 50) return '#faad14' // 橙色
-  return '#52c41a' // 绿色
-})
 
 // 页面加载
 onMounted(async () => {
@@ -422,23 +331,6 @@ onMounted(async () => {
   margin: 0 auto;
 }
 
-/* 空间信息布局样式 */
-.space-info-layout {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
-  padding: 20px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 16px;
-  border: 1px solid #dee2e6;
-}
-
-/* 左侧：空间名称和创建按钮 */
-.space-info-left {
-  flex: 1;
-}
-
 .space-name-section {
   display: flex;
   align-items: center;
@@ -459,130 +351,6 @@ onMounted(async () => {
   height: 36px;
   border-radius: 8px;
   font-weight: 600;
-}
-
-/* 右侧：统计信息和详情按钮 */
-.space-info-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 12px;
-}
-
-.space-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  background: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  min-width: 200px;
-}
-
-.stat-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-}
-
-.stat-label {
-  color: #6c757d;
-  font-weight: 500;
-}
-
-.stat-value {
-  color: #2c3e50;
-  font-weight: 600;
-}
-
-.detail-toggle-btn {
-  color: #667eea;
-  font-size: 12px;
-  height: 28px;
-  padding: 0 12px;
-}
-
-/* 隐藏式详细信息面板 */
-.space-detail-panel {
-  width: 100%;
-  margin-top: 16px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.detail-content {
-  padding: 20px;
-}
-
-.detail-section {
-  margin-bottom: 20px;
-}
-
-.detail-section:last-child {
-  margin-bottom: 0;
-}
-
-.detail-section h4 {
-  margin: 0 0 12px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #2c3e50;
-  border-bottom: 2px solid #ecf0f1;
-  padding-bottom: 8px;
-}
-
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-}
-
-.detail-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-}
-
-.detail-label {
-  color: #6c757d;
-  font-weight: 500;
-  font-size: 13px;
-}
-
-.detail-value {
-  color: #2c3e50;
-  font-weight: 600;
-  font-size: 13px;
-}
-
-.usage-progress {
-  margin-top: 8px;
-}
-
-.progress-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  font-size: 13px;
-  color: #6c757d;
 }
 
 .search-bar {
@@ -658,26 +426,6 @@ onMounted(async () => {
     padding: 16px;
   }
 
-  .space-info-layout {
-    flex-direction: column;
-    gap: 16px;
-    padding: 16px;
-  }
-
-  .space-info-left {
-    width: 100%;
-  }
-
-  .space-info-right {
-    align-items: flex-start;
-    width: 100%;
-  }
-
-  .space-stats {
-    min-width: auto;
-    width: 100%;
-  }
-
   .search-bar {
     margin-bottom: 12px;
   }
@@ -707,14 +455,6 @@ onMounted(async () => {
 @media (max-width: 480px) {
   #mySpacePage {
     padding: 12px;
-  }
-
-  .space-info-layout {
-    padding: 12px;
-  }
-
-  .space-name {
-    font-size: 20px;
   }
 
   .search-bar {

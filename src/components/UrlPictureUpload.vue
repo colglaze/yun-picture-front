@@ -10,6 +10,8 @@ const props = defineProps<{
 
 const loading = ref<boolean>(false)
 const fileUrl = ref<string>()
+const picName = ref<string>() // 新增图片名称
+const spaceId = ref<number>() // 新增空间ID
 
 /**
  * 上传
@@ -17,7 +19,12 @@ const fileUrl = ref<string>()
 const handleUpload = async () => {
   loading.value = true
   try {
-    const params: API.PictureUploadRequest = { fileUrl: fileUrl.value }
+    const params: API.PictureUploadRequest = {
+      fileUrl: fileUrl.value,
+      picName: picName.value, // 新增
+      spaceId: spaceId.value, // 新增
+    }
+
     if (props.picture) {
       params.id = props.picture.id
     }
@@ -35,20 +42,22 @@ const handleUpload = async () => {
     loading.value = false
   }
 }
-
 </script>
 
 <template>
   <div class="url-picture-upload">
     <a-input-group compact style="margin-bottom: 16px">
-      <a-input v-model:value="fileUrl" style="width: calc(100% - 120px)" placeholder="请输入图片 URL" />
-      <a-button type="primary" :loading="loading" @click="handleUpload" style="width: 120px">提交</a-button>
+      <a-input
+        v-model:value="fileUrl"
+        style="width: calc(100% - 120px)"
+        placeholder="请输入图片 URL"
+      />
+      <a-button type="primary" :loading="loading" @click="handleUpload" style="width: 120px"
+        >提交</a-button
+      >
     </a-input-group>
     <img v-if="picture?.url" :src="picture?.url" alt="avatar" />
   </div>
-
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>
