@@ -51,6 +51,20 @@
             :alt="picture.name || '图片预览'"
             class="preview-image"
           />
+
+          <!-- 编辑图片按钮和裁剪组件 - 只在有图片时显示 -->
+          <div v-if="picture" class="edit-bar">
+            <a-button :icon="h(EditOutlined)" @click="doEditPicture">编辑图片</a-button>
+            <ImageCropper
+              ref="imageCropperRef"
+              :imageUrl="picture?.url"
+              :picture="picture"
+              :spaceId="spaceId"
+              :onSuccess="onCropSuccess"
+            />
+          </div>
+
+
           <div class="image-info">
             <p><strong>图片名称：</strong>{{ picture.name || '未设置' }}</p>
             <p><strong>图片格式：</strong>{{ picture.picFormat || '未知' }}</p>
@@ -129,10 +143,10 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed } from 'vue'
+import { reactive, ref, onMounted, computed, h } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
+import { EditOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import UploadPicture from '@/components/UploadPicture.vue'
 import {
   editPictureUsingPost,
@@ -140,6 +154,7 @@ import {
   listPictureTagCategoryUsingGet
 } from '@/api/wenjianchuanshu'
 import UrlPictureUpload from '@/components/UrlPictureUpload.vue'
+import ImageCropper from '@/components/ImageCropper.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -268,6 +283,22 @@ onMounted(() => {
   getTagCategoryOptions()
   getOldPicture()
 })
+
+// 图片编辑弹窗引用
+const imageCropperRef = ref()
+
+// 编辑图片
+const doEditPicture = () => {
+  if (imageCropperRef.value) {
+    imageCropperRef.value.openModal()
+  }
+}
+
+// 编辑成功事件
+const onCropSuccess = (newPicture: API.PictureVO) => {
+  picture.value = newPicture
+}
+
 </script>
 
 <style scoped>
@@ -483,4 +514,10 @@ onMounted(() => {
     font-size: 18px;
   }
 }
+
+#addPicturePage .edit-bar {
+  text-align: center;
+  margin: 16px 0;
+}
+
 </style>
