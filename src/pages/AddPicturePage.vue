@@ -54,7 +54,12 @@
 
           <!-- 编辑图片按钮和裁剪组件 - 只在有图片时显示 -->
           <div v-if="picture" class="edit-bar">
-            <a-button :icon="h(EditOutlined)" @click="doEditPicture">编辑图片</a-button>
+            <a-space size="middle">
+              <a-button :icon="h(EditOutlined)" @click="doEditPicture">编辑图片</a-button>
+              <a-button type="primary" ghost :icon="h(FullscreenOutlined)" @click="doImagePainting">
+                AI 扩图
+              </a-button>
+            </a-space>
             <ImageCropper
               ref="imageCropperRef"
               :imageUrl="picture?.url"
@@ -63,6 +68,12 @@
               :onSuccess="onCropSuccess"
             />
           </div>
+          <AiImageCropper
+            ref="imageOutPaintingRef"
+            :picture="picture"
+            :spaceId="spaceId"
+            :onSuccess="onImageOutPaintingSuccess"
+          />
 
 
           <div class="image-info">
@@ -146,7 +157,7 @@
 import { reactive, ref, onMounted, computed, h } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { EditOutlined, PlusOutlined } from '@ant-design/icons-vue'
+import { EditOutlined, PlusOutlined, FullscreenOutlined } from '@ant-design/icons-vue'
 import UploadPicture from '@/components/UploadPicture.vue'
 import {
   editPictureUsingPost,
@@ -155,6 +166,22 @@ import {
 } from '@/api/wenjianchuanshu'
 import UrlPictureUpload from '@/components/UrlPictureUpload.vue'
 import ImageCropper from '@/components/ImageCropper.vue'
+import AiImageCropper from '@/components/AiImageCropper.vue'
+
+// AI 扩图弹窗引用
+const imageOutPaintingRef = ref()
+
+// AI 扩图
+const doImagePainting = () => {
+  if (imageOutPaintingRef.value) {
+    imageOutPaintingRef.value.openModal()
+  }
+}
+
+// 编辑成功事件
+const onImageOutPaintingSuccess = (newPicture: API.PictureVO) => {
+  picture.value = newPicture
+}
 
 const router = useRouter()
 const route = useRoute()
