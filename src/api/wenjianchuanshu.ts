@@ -112,17 +112,14 @@ export async function createPictureOutPaintingTaskUsingPost(
   body: API.CreatePictureOutPaintingTaskRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.BaseResponseCreateOutPaintingTaskResponse_>(
-    '/api/file/out_painting/create_task',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      data: body,
-      ...(options || {}),
-    }
-  )
+  return request<API.BaseResponseString_>('/api/file/out_painting/create_task', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
 }
 
 /** 查询 AI 扩图任务 GET /api/file/out_painting/get_task */

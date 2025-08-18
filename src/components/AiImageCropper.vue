@@ -92,16 +92,16 @@ const startPolling = () => {
   if (pollingTimer) {
     clearInterval(pollingTimer)
   }
-  
+
   // 设置新的轮询
   pollingTimer = window.setInterval(async () => {
     if (!taskId.value) return
-    
+
     try {
       const res = await getPictureOutPaintingTaskUsingGet({
         taskId: taskId.value
       })
-      
+
       if (res.data.code === 0 && res.data.data) {
         const taskData = res.data.data
         // 检查任务状态

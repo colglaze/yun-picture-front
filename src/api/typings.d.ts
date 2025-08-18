@@ -5,12 +5,6 @@ declare namespace API {
     message?: string
   }
 
-  type BaseResponseCreateOutPaintingTaskResponse_ = {
-    code?: number
-    data?: CreateOutPaintingTaskResponse
-    message?: string
-  }
-
   type BaseResponseGetOutPaintingTaskResponse_ = {
     code?: number
     data?: GetOutPaintingTaskResponse
@@ -113,13 +107,6 @@ declare namespace API {
     message?: string
   }
 
-  type CreateOutPaintingTaskResponse = {
-    code?: string
-    message?: string
-    output?: Output
-    requestId?: string
-  }
-
   type CreatePictureOutPaintingTaskRequest = {
     parameters?: Parameters
     pictureId?: number
@@ -142,7 +129,7 @@ declare namespace API {
   }
 
   type GetOutPaintingTaskResponse = {
-    output?: Output1
+    output?: Output
     requestId?: string
   }
 
@@ -189,11 +176,6 @@ declare namespace API {
   type MapStringLong_ = true
 
   type Output = {
-    taskId?: string
-    taskStatus?: string
-  }
-
-  type Output1 = {
     code?: string
     endTime?: string
     message?: string
