@@ -31,6 +31,7 @@
           <UploadPicture
             :onChange="onPictureChange"
             :picture="picture"
+            :spaceId="spaceId"
           />
         </template>
         <template v-else>
@@ -219,13 +220,13 @@ const handleSubmit = async (values: API.PictureVO) => {
   try {
     let res
     // 显式携带 userId 字段
+    // eslint-disable-next-line prefer-const
     res = await editPictureUsingPost({
       id: picture.value.id,
       spaceId:spaceId.value,
       userId: picture.value.userId, // 新增此行
       ...values,
     })
-
     if (res.data.code === 0 && res.data.data) {
       message.success(isEdit ? '更新成功' : '创建成功')
       // 跳转到图片管理页面

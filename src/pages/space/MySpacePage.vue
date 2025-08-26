@@ -109,7 +109,7 @@ import { PlusOutlined } from '@ant-design/icons-vue'
 import { Empty } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import {
-  listSpaceByPageUsingPost
+  getSpaceVoByIdUsingPost,
 } from '@/api/kongjianguanli'
 import {
   listPictureVoByPageUsingPost,
@@ -173,16 +173,14 @@ const fetchUserSpace = async () => {
     }
 
     console.log('开始获取用户空间信息，用户ID:', loginUser.id)
-    const res = await listSpaceByPageUsingPost({
+    const res = await getSpaceVoByIdUsingPost({
       userId: loginUser.id,
-      current: 1,
-      pageSize: 1,
     })
 
     console.log('空间信息API响应:', res)
 
-    if (res.data.code === 0 && res.data.data?.records?.length > 0) {
-      space.value = res.data.data.records[0]
+    if (res.data.code === 0 && res.data.data) {
+      space.value = res.data.data
       console.log('获取到空间信息:', space.value)
       // 设置空间ID到搜索参数
       searchParams.spaceId = space.value.id

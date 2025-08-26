@@ -1,12 +1,12 @@
 <script setup lang="ts">
 
-import { SPACE_LEVEL_ENUM, SPACE_LEVEL_OPTIONS } from '@/constants/space'
-import { onMounted, reactive, ref } from 'vue'
+import { SPACE_LEVEL_ENUM, SPACE_LEVEL_OPTIONS, SPACE_TYPE_ENUM, SPACE_TYPE_MAP } from '@/constants/space'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import router from '@/router'
 import {
   createSpaceUsingPost,
-  getSpaceVoByIdUsingGet,
+  getSpaceVoByIdUsingPost,
   listSpaceLevelUsingGet,
   updateSpaceUsingDelete
 } from '@/api/kongjianguanli'
@@ -32,6 +32,7 @@ const handleSubmit = async (values: any) => {
     // 创建
     res = await createSpaceUsingPost({
       ...formData,
+      spaceType: spaceType.value,
     })
   }
   if (res.data.code === 0 && res.data.data) {
@@ -66,7 +67,7 @@ const getOldSpace = async () => {
   // 获取数据
   const id = route.query?.id
   if (id) {
-    const res = await getSpaceVoByIdUsingGet({
+    const res = await getSpaceVoByIdUsingPost({
       id: id,
     })
     if (res.data.code === 0 && res.data.data) {
@@ -85,7 +86,13 @@ function formatSize(size: number) {
   if (size < 1024 * 1024 * 1024) return (size / 1024 / 1024).toFixed(2) + 'MB'
   return (size / 1024 / 1024 / 1024).toFixed(2) + 'GB'
 }
-
+// 空间类别
+const spaceType = computed(() => {
+  if (route.query?.type) {
+    return Number(route.query.type)
+  }
+  return SPACE_TYPE_ENUM.PRIVATE
+})
 // 页面加载时，请求老数据和空间级别
 onMounted(async () => {
   await Promise.all([
@@ -100,6 +107,9 @@ const showWeixin = ref(false)
 
 <template>
   <div class="add-space-page-wrapper" >
+    <h2 style="margin-bottom: 16px">
+      {{ route.query?.id ? '修改' : '创建' }}{{ SPACE_TYPE_MAP[spaceType] }}
+    </h2>
     <a-form layout="vertical" :model="formData" @finish="handleSubmit">
       <a-form-item label="空间名称" name="spaceName">
         <a-input v-model:value="formData.spaceName" placeholder="请输入空间名称" allow-clear />

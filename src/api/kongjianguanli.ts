@@ -47,17 +47,17 @@ export async function editSpaceUsingDelete(
   })
 }
 
-/** 根据id获取空间vo GET /api/space/get/vo */
-export async function getSpaceVoByIdUsingGet(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.getSpaceVoByIdUsingGETParams,
+/** 根据id获取空间vo POST /api/space/get/vo */
+export async function getSpaceVoByIdUsingPost(
+  body: API.SpaceQueryRequest,
   options?: { [key: string]: any }
 ) {
   return request<API.BaseResponseSpaceVO_>('/api/space/get/vo', {
-    method: 'GET',
-    params: {
-      ...params,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
     },
+    data: body,
     ...(options || {}),
   })
 }

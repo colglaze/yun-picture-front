@@ -107,22 +107,25 @@ export async function listPictureVoByPageUsingPost(
   })
 }
 
-/** 创建 AI 扩图任务 POST /api/file/out_painting/create_task */
+/** createPictureOutPaintingTask POST /api/file/out_painting/create_task */
 export async function createPictureOutPaintingTaskUsingPost(
   body: API.CreatePictureOutPaintingTaskRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.BaseResponseString_>('/api/file/out_painting/create_task', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    data: body,
-    ...(options || {}),
-  })
+  return request<API.BaseResponseCreateOutPaintingTaskResponse_>(
+    '/api/file/out_painting/create_task',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: body,
+      ...(options || {}),
+    }
+  )
 }
 
-/** 查询 AI 扩图任务 GET /api/file/out_painting/get_task */
+/** getPictureOutPaintingTask GET /api/file/out_painting/get_task */
 export async function getPictureOutPaintingTaskUsingGet(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.getPictureOutPaintingTaskUsingGETParams,
@@ -152,7 +155,7 @@ export async function doPictureReviewUsingPost(
   })
 }
 
-/** 获取标签以及分类 GET /api/file/tag_category */
+/** listPictureTagCategory GET /api/file/tag_category */
 export async function listPictureTagCategoryUsingGet(options?: { [key: string]: any }) {
   return request<API.BaseResponsePictureTagCategory_>('/api/file/tag_category', {
     method: 'GET',
