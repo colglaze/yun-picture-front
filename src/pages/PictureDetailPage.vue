@@ -71,7 +71,7 @@
               <template #icon><EditOutlined /></template>
               编辑
             </a-button>
-            <a-button v-if="canEdit" danger @click="doDelete">
+            <a-button v-if="canDelete" danger @click="doDelete">
               <template #icon><DeleteOutlined /></template>
               删除
             </a-button>
@@ -95,6 +95,7 @@ import {
 import { getPictureVoByIdUsingGet, deletePictureUsingPost } from '@/api/wenjianchuanshu'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import { getVoByIdUsingPost } from '@/api/yonghuxiangguanjiekou'
+import { SPACE_PERMISSION_ENUM } from '@/constants/space'
 
 const route = useRoute()
 const router = useRouter()
@@ -128,17 +129,28 @@ const fetchPictureDetail = async () => {
   }
 }
 
-// 是否具有编辑权限
-const canEdit = computed(() => {
-  const loginUser = loginUserStore.loginUser
-  // 未登录不可编辑
-  if (!loginUser.id) {
-    return false
-  }
-  // 仅本人或管理员可编辑
-  const user = picture.value.user || {}
-  return loginUser.id === user.id || loginUser.userRole === 'admin'
-})
+// 通用权限检查函数
+function createPermissionChecker(permission: string) {
+  return computed(() => {
+    return (picture.value.permissionList ?? []).includes(permission)
+  })
+}
+
+// 定义权限检查
+const canEdit = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_EDIT)
+const canDelete = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_DELETE)
+
+// // 是否具有编辑权限
+// const canEdit = computed(() => {
+//   const loginUser = loginUserStore.loginUser
+//   // 未登录不可编辑
+//   if (!loginUser.id) {
+//     return false
+//   }
+//   // 仅本人或管理员可编辑
+//   const user = picture.value.user || {}
+//   return loginUser.id === user.id || loginUser.userRole === 'admin'
+// })
 
 // 编辑
 // 编辑

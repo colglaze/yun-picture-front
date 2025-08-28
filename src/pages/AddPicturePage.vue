@@ -66,8 +66,10 @@
               :imageUrl="picture?.url"
               :picture="picture"
               :spaceId="spaceId"
-              :onSuccess="onCropSuccess"
+              :space="space"
+              :onSuccess="onSuccess"
             />
+
           </div>
           <AiImageCropper
             ref="imageOutPaintingRef"
@@ -155,7 +157,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed, h } from 'vue'
+import { reactive, ref, onMounted, computed, h, watchEffect } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { EditOutlined, PlusOutlined, FullscreenOutlined } from '@ant-design/icons-vue'
@@ -168,6 +170,7 @@ import {
 import UrlPictureUpload from '@/components/UrlPictureUpload.vue'
 import ImageCropper from '@/components/ImageCropper.vue'
 import AiImageCropper from '@/components/AiImageCropper.vue'
+import { getSpaceVoByIdUsingPost } from '@/api/kongjianguanli'
 
 // AI 扩图弹窗引用
 const imageOutPaintingRef = ref()
@@ -326,6 +329,27 @@ const doEditPicture = () => {
 const onCropSuccess = (newPicture: API.PictureVO) => {
   picture.value = newPicture
 }
+
+const space = ref<API.SpaceVO>()
+
+// 获取空间信息
+const fetchSpace = async () => {
+  // 获取数据
+  if (spaceId.value) {
+    const res = await getSpaceVoByIdUsingPost({
+      id: spaceId.value,
+    })
+    if (res.data.code === 0 && res.data.data) {
+      space.value = res.data.data
+    }
+  }
+}
+
+watchEffect(() => {
+  fetchSpace()
+})
+
+
 
 </script>
 

@@ -1,17 +1,17 @@
 import { message } from "ant-design-vue";
 import axios from "axios";
 
-const DEV_BASE_URL = "http://localhost:8123"; // 开发环境基础地址
-// const PROD_BASE_URL = "http://81.69.229.63"; // 生产环境基础地址（已注释）
+// const DEV_BASE_URL = "http://localhost:8123"; // 开发环境基础地址
+const PROD_BASE_URL = "http://8.152.196.106"; // 生产环境基础地址（已注释）
 // 创建 Axios 实例
 const myAxios = axios.create({ // 创建 axios 实例
-    baseURL: DEV_BASE_URL, // 设置基础地址为开发环境
+    baseURL: PROD_BASE_URL, // 设置基础地址为开发环境
     timeout: 10000, // 设置超时时间为 10 秒
     withCredentials: true, // 允许携带 cookie
 });
 
 // 全局请求拦截器
-myAxios.interceptors.request.use( // 添加请求拦截器 
+myAxios.interceptors.request.use( // 添加请求拦截器
   function (config) { // 请求发送前的处理
     // Do something before request is sent // 发送请求前的操作
     return config // 返回配置

@@ -12,8 +12,5 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  server: {
-    allowedHosts: ['49b0aa4c.r12.cpolar.top'],
-  },
 })
 

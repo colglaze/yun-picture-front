@@ -215,6 +215,7 @@ onMounted(async () => {
       <div style="display: flex; align-items: center; gap: 16px;">
 
         <a-button
+          v-if="canManageSpaceUser"
           type="primary"
           ghost
           :icon="h(TeamOutlined)"
