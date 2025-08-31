@@ -145,7 +145,7 @@ onMounted(() => {
 
 /* 水印效果 */
 .picture-upload :deep(.ant-upload-select-picture-card)::before {
-  content: "1856640366775734274";
+  content: "Love is given freely, cherish it.";
   position: absolute;
   top: 0;
   left: 0;

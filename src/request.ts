@@ -1,11 +1,12 @@
 import { message } from "ant-design-vue";
 import axios from "axios";
 
-// const DEV_BASE_URL = "http://localhost:8123"; // 开发环境基础地址
-const PROD_BASE_URL = "http://8.152.196.106"; // 生产环境基础地址（已注释）
+const DEV_BASE_URL = "http://localhost:8123"; // 开发环境基础地址
+// 生产环境使用站点根路径（空串），接口方法里已自带 /api 前缀，避免 /api/api 叠加
+const PROD_BASE_URL = "";
 // 创建 Axios 实例
 const myAxios = axios.create({ // 创建 axios 实例
-    baseURL: PROD_BASE_URL, // 设置基础地址为开发环境
+    baseURL: import.meta.env.MODE === 'development' ? DEV_BASE_URL : PROD_BASE_URL, // 环境切换
     timeout: 10000, // 设置超时时间为 10 秒
     withCredentials: true, // 允许携带 cookie
 });
